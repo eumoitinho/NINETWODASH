@@ -288,14 +288,14 @@ export class GoogleAdsClient {
 }
 
 /**
- * Create Google Ads client instance
+ * Create Google Ads client instance with custom credentials
  */
-export function createGoogleAdsClient(customerId: string): GoogleAdsClient {
+export function createGoogleAdsClient(customerId: string, credentials?: any): GoogleAdsClient {
   const config: GoogleAdsConfig = {
-    developerId: process.env.GOOGLE_ADS_DEVELOPER_TOKEN || '',
-    clientId: process.env.GOOGLE_ADS_CLIENT_ID || '',
-    clientSecret: process.env.GOOGLE_ADS_CLIENT_SECRET || '',
-    refreshToken: process.env.GOOGLE_ADS_REFRESH_TOKEN || '',
+    developerId: credentials?.developerId || process.env.GOOGLE_ADS_DEVELOPER_TOKEN || '',
+    clientId: credentials?.clientId || process.env.GOOGLE_ADS_CLIENT_ID || '',
+    clientSecret: credentials?.clientSecret || process.env.GOOGLE_ADS_CLIENT_SECRET || '',
+    refreshToken: credentials?.refreshToken || process.env.GOOGLE_ADS_REFRESH_TOKEN || '',
     customerId,
   };
 

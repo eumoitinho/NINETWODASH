@@ -413,14 +413,15 @@ export class GoogleAnalyticsClient {
 }
 
 /**
- * Create Google Analytics client instance
+ * Create Google Analytics client instance with custom credentials
  */
-export function createGoogleAnalyticsClient(propertyId: string, viewId?: string): GoogleAnalyticsClient {
+export function createGoogleAnalyticsClient(propertyId: string, viewId?: string, credentials?: any): GoogleAnalyticsClient {
   const config: GoogleAnalyticsConfig = {
     propertyId,
     viewId,
-    clientEmail: process.env.GOOGLE_ANALYTICS_CLIENT_EMAIL,
-    privateKey: process.env.GOOGLE_ANALYTICS_PRIVATE_KEY,
+    serviceAccountKey: credentials?.serviceAccountKey,
+    clientEmail: credentials?.clientEmail || process.env.GOOGLE_ANALYTICS_CLIENT_EMAIL,
+    privateKey: credentials?.privateKey || process.env.GOOGLE_ANALYTICS_PRIVATE_KEY,
   };
 
   return new GoogleAnalyticsClient(config);

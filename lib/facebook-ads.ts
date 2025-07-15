@@ -313,13 +313,13 @@ export class FacebookAdsClient {
 }
 
 /**
- * Create Facebook Ads client instance
+ * Create Facebook Ads client instance with custom credentials
  */
-export function createFacebookAdsClient(adAccountId: string, pixelId?: string): FacebookAdsClient {
+export function createFacebookAdsClient(adAccountId: string, pixelId?: string, credentials?: any): FacebookAdsClient {
   const config: FacebookAdsConfig = {
-    appId: process.env.FACEBOOK_APP_ID || '',
-    appSecret: process.env.FACEBOOK_APP_SECRET || '',
-    accessToken: process.env.FACEBOOK_ACCESS_TOKEN || '',
+    appId: credentials?.appId || process.env.FACEBOOK_APP_ID || '',
+    appSecret: credentials?.appSecret || process.env.FACEBOOK_APP_SECRET || '',
+    accessToken: credentials?.accessToken || process.env.FACEBOOK_ACCESS_TOKEN || '',
     adAccountId,
     pixelId,
   };

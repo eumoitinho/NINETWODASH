@@ -98,7 +98,7 @@ const ClientSchema = new mongoose.Schema({
   avatar: String,
   tags: [String],
   
-  // API Configurations
+  // API Configurations (credenciais são armazenadas criptografadas)
   googleAds: {
     customerId: String,
     connected: {
@@ -106,6 +106,8 @@ const ClientSchema = new mongoose.Schema({
       default: false,
     },
     lastSync: Date,
+    // Credenciais criptografadas (developer_token, client_id, client_secret, refresh_token)
+    encryptedCredentials: String,
   },
   
   facebookAds: {
@@ -116,6 +118,8 @@ const ClientSchema = new mongoose.Schema({
       default: false,
     },
     lastSync: Date,
+    // Credenciais criptografadas (app_id, app_secret, access_token)
+    encryptedCredentials: String,
   },
   
   googleAnalytics: {
@@ -126,6 +130,8 @@ const ClientSchema = new mongoose.Schema({
       default: false,
     },
     lastSync: Date,
+    // Credenciais criptografadas (service_account_key ou client_email + private_key)
+    encryptedCredentials: String,
   },
   
   // Client Portal Settings
