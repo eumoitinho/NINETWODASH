@@ -14,24 +14,85 @@ const ClientAnalytics = ({ clientId }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedPeriod, setSelectedPeriod] = useState('30d');
 
-  useEffect(() => {
-    // Simular carregamento de dados do cliente
-    setClient({
-      id: clientId,
-      name: "TechCorp Solutions",
-      email: "contato@techcorp.com",
-      status: "active",
-      ga4Connected: true,
-      metaConnected: true,
-      lastSync: "2024-01-15",
-      monthlyBudget: 15000
-    });
+  const [dashboardData, setDashboardData] = useState(null);
+  const [error, setError] = useState(null);
 
-    // Simular carregamento de dados
-    setTimeout(() => {
+  useEffect(() => {
+    fetchDashboardData();
+  }, [clientId, selectedPeriod]);
+
+  const fetchDashboardData = async () => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      // Map numeric clientId to string identifier
+      const clientSlug = getClientSlug(clientId);
+      
+      const response = await fetch(`/api/dashboard/${clientSlug}?period=${selectedPeriod}`, {
+        headers: {
+          'Authorization': `Bearer ${process.env.NEXT_PUBLIC_API_KEY || 'ninetwodash-secure-api-key-2025'}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch data: ${response.status}`);
+      }
+
+      const result = await response.json();
+      
+      if (result.success) {
+        setDashboardData(result.data);
+        setClient(result.data.client);
+      } else {
+        throw new Error(result.message || 'Failed to fetch dashboard data');
+      }
+    } catch (err) {
+      console.error('Error fetching dashboard data:', err);
+      setError(err.message);
+      
+      // Fallback to mock data
+      setClient({
+        id: clientId,
+        name: "TechCorp Solutions",
+        email: "contato@techcorp.com",
+        status: "active",
+        ga4Connected: true,
+        metaConnected: true,
+        lastSync: new Date().toISOString(),
+        monthlyBudget: 15000
+      });
+    } finally {
       setIsLoading(false);
-    }, 1000);
-  }, [clientId]);
+    }
+  };
+
+  // Map client ID to slug for API calls
+  const getClientSlug = (id) => {
+    const clientMapping = {
+      1: 'abc-evo',
+      2: 'dr-victor-mauro',
+      3: 'dr-percio',
+      4: 'cwtrends',
+      5: 'global-best-part',
+      6: 'lj-santos',
+      7: 'favretto-midia-exterior',
+      8: 'favretto-comunicacao-visual',
+      9: 'mundial',
+      10: 'naframe',
+      11: 'motin-films',
+      12: 'naport',
+      13: 'autoconnect-prime',
+      14: 'vtelco-networks',
+      15: 'amitech',
+      16: 'catalisti-holding',
+      17: 'hogrefe-construtora',
+      18: 'colaco-engenharia',
+      19: 'pesados-web',
+      20: 'eleva-corpo-e-alma',
+    };
+    return clientMapping[id] || 'catalisti-holding';
+  };
 
   // Configurações do gráfico de receita
   const revenueChartOptions = {
@@ -196,9 +257,13 @@ const ClientAnalytics = ({ clientId }) => {
                     90 dias
                   </button>
                 </div>
-                <button className="btn btn-outline-primary btn-sm">
+                <button 
+                  className="btn btn-outline-primary btn-sm"
+                  onClick={fetchDashboardData}
+                  disabled={isLoading}
+                >
                   <Icon icon="solar:refresh-bold" className="me-2" />
-                  Sincronizar
+                  {isLoading ? 'Sincronizando...' : 'Sincronizar'}
                 </button>
                 <Link href={`/edit-client/${clientId}`} className="btn btn-outline-secondary btn-sm">
                   <Icon icon="solar:pen-bold" className="me-2" />
@@ -220,7 +285,21 @@ const ClientAnalytics = ({ clientId }) => {
                 <div className="d-flex justify-content-between align-items-center">
                   <div>
                     <h6 className="mb-1">Status do Cliente</h6>
-                    <p className="text-muted mb-0">Última sincronização: {client?.lastSync}</p>
+                    <p className="text-muted mb-0">
+                      Última sincronização: {dashboardData?.lastUpdated ? 
+                        new Date(dashboardData.lastUpdated).toLocaleString('pt-BR') : 
+                        client?.lastSync
+                      }
+                    </p>
+                    {dashboardData?.dataSource && (
+                      <div className="mt-2">
+                        <small className="text-muted">
+                          Fonte: {dashboardData.dataSource.mock ? 'Dados simulados' : 
+                          `Google Ads ${dashboardData.dataSource.googleAds ? '✓' : '✗'}, 
+                           Facebook ${dashboardData.dataSource.facebookAds ? '✓' : '✗'}`}
+                        </small>
+                      </div>
+                    )}
                   </div>
                   <div className="d-flex gap-2">
                     <span className={`badge ${client?.ga4Connected ? 'bg-success-subtle text-success-main' : 'bg-danger-subtle text-danger-main'}`}>
@@ -233,9 +312,96 @@ const ClientAnalytics = ({ clientId }) => {
                     </span>
                   </div>
                 </div>
+                
+                {/* Error Display */}
+                {error && (
+                  <div className="alert alert-warning mt-3 mb-0">
+                    <Icon icon="solar:warning-triangle-bold" className="me-2" />
+                    Erro ao carregar dados: {error}. Exibindo dados simulados.
+                  </div>
+                )}
               </div>
             </div>
           </div>
+
+          {/* KPIs Principais */}
+          {dashboardData?.summary && (
+            <div className="col-12">
+              <div className="row gy-4">
+                <div className="col-lg-3 col-sm-6">
+                  <div className="card">
+                    <div className="card-body">
+                      <div className="d-flex align-items-center gap-2">
+                        <div className="w-50-px h-50-px bg-primary-subtle text-primary-main rounded-circle d-flex justify-content-center align-items-center">
+                          <Icon icon="solar:eye-bold" className="text-lg" />
+                        </div>
+                        <div className="flex-grow-1">
+                          <h4 className="mb-1 text-primary-main">
+                            {dashboardData.summary.totalImpressions.toLocaleString('pt-BR')}
+                          </h4>
+                          <p className="text-secondary-light mb-0">Impressões</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="col-lg-3 col-sm-6">
+                  <div className="card">
+                    <div className="card-body">
+                      <div className="d-flex align-items-center gap-2">
+                        <div className="w-50-px h-50-px bg-success-subtle text-success-main rounded-circle d-flex justify-content-center align-items-center">
+                          <Icon icon="solar:cursor-bold" className="text-lg" />
+                        </div>
+                        <div className="flex-grow-1">
+                          <h4 className="mb-1 text-success-main">
+                            {dashboardData.summary.totalClicks.toLocaleString('pt-BR')}
+                          </h4>
+                          <p className="text-secondary-light mb-0">Cliques</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="col-lg-3 col-sm-6">
+                  <div className="card">
+                    <div className="card-body">
+                      <div className="d-flex align-items-center gap-2">
+                        <div className="w-50-px h-50-px bg-warning-subtle text-warning-main rounded-circle d-flex justify-content-center align-items-center">
+                          <Icon icon="solar:wallet-money-bold" className="text-lg" />
+                        </div>
+                        <div className="flex-grow-1">
+                          <h4 className="mb-1 text-warning-main">
+                            R$ {dashboardData.summary.totalCost.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                          </h4>
+                          <p className="text-secondary-light mb-0">Investimento</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="col-lg-3 col-sm-6">
+                  <div className="card">
+                    <div className="card-body">
+                      <div className="d-flex align-items-center gap-2">
+                        <div className="w-50-px h-50-px bg-danger-subtle text-danger-main rounded-circle d-flex justify-content-center align-items-center">
+                          <Icon icon="solar:target-bold" className="text-lg" />
+                        </div>
+                        <div className="flex-grow-1">
+                          <h4 className="mb-1 text-danger-main">
+                            {dashboardData.summary.totalConversions.toLocaleString('pt-BR')}
+                          </h4>
+                          <p className="text-secondary-light mb-0">Conversões</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Gráfico de Receita */}
           <div className="col-xxl-8">
