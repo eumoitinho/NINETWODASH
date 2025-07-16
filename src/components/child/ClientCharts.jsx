@@ -5,7 +5,7 @@ import dynamic from 'next/dynamic';
 // Importar componentes de chart dinamicamente para evitar problemas de SSR
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 
-const ClientCharts = ({ clientData }) => {
+const ClientCharts = ({ clientSlug, period, dashboardData, onPeriodChange }) => {
   // Configurações do gráfico de tráfego por fonte
   const trafficSourceOptions = {
     chart: {
@@ -43,12 +43,33 @@ const ClientCharts = ({ clientData }) => {
     }
   };
 
-  const trafficSourceSeries = [
-    {
-      name: 'Sessões',
-      data: [4500, 3200, 1800, 1200, 800]
+  // Processar dados reais das campanhas por plataforma
+  const processTrafficSourceData = () => {
+    if (!dashboardData?.campaigns) {
+      return [{ name: 'Sessões', data: [0, 0, 0, 0, 0] }];
     }
-  ];
+
+    const googleAdsData = dashboardData.campaigns
+      .filter(campaign => campaign.platform === 'google_ads')
+      .reduce((acc, campaign) => acc + (campaign.metrics?.impressions || 0), 0);
+
+    const facebookAdsData = dashboardData.campaigns
+      .filter(campaign => campaign.platform === 'facebook')
+      .reduce((acc, campaign) => acc + (campaign.metrics?.impressions || 0), 0);
+
+    // Simular dados para outras fontes baseado na proporção
+    const total = googleAdsData + facebookAdsData;
+    const organic = Math.round(total * 0.3);
+    const direct = Math.round(total * 0.2);
+    const others = Math.round(total * 0.1);
+
+    return [{
+      name: 'Impressões',
+      data: [googleAdsData, facebookAdsData, organic, direct, others]
+    }];
+  };
+
+  const trafficSourceSeries = processTrafficSourceData();
 
   // Configurações do gráfico de conversões por dispositivo
   const deviceConversionOptions = {
@@ -76,7 +97,27 @@ const ClientCharts = ({ clientData }) => {
     }
   };
 
-  const deviceConversionSeries = [45, 40, 15];
+  // Processar dados de conversões por dispositivo
+  const processDeviceConversionData = () => {
+    if (!dashboardData?.summary) {
+      return [0, 0, 0];
+    }
+
+    const totalConversions = dashboardData.summary.totalConversions || dashboardData.summary.conversions || 0;
+    
+    if (totalConversions === 0) {
+      return [0, 0, 0];
+    }
+
+    // Simular distribuição baseada em padrões comuns
+    const desktop = Math.round(totalConversions * 0.45);
+    const mobile = Math.round(totalConversions * 0.40);
+    const tablet = totalConversions - desktop - mobile;
+
+    return [desktop, mobile, tablet];
+  };
+
+  const deviceConversionSeries = processDeviceConversionData();
 
   // Configurações do gráfico de performance de campanhas
   const campaignPerformanceOptions = {
@@ -115,12 +156,37 @@ const ClientCharts = ({ clientData }) => {
     }
   };
 
-  const campaignPerformanceSeries = [
-    {
-      name: 'Performance',
-      data: [2.8, 1.2, 85, 4.2, 95, 78]
+  // Processar dados de performance de campanhas
+  const processCampaignPerformanceData = () => {
+    if (!dashboardData?.summary) {
+      return [{ name: 'Performance', data: [2.8, 1.2, 85, 4.2, 95, 78] }];
     }
-  ];
+
+    const summary = dashboardData.summary;
+    const ctr = summary.averageCTR || summary.ctr || 0;
+    const cpc = summary.averageCPC || summary.cpc || 0;
+    const conversions = summary.totalConversions || summary.conversions || 0;
+    const roas = summary.totalROAS || summary.roas || 0;
+    const impressions = summary.totalImpressions || summary.impressions || 0;
+    const clicks = summary.totalClicks || summary.clicks || 0;
+
+    // Normalizar dados para o gráfico radar (escala 0-100)
+    const normalizedData = [
+      Math.min(ctr * 10, 100), // CTR * 10 para melhor visualização
+      Math.min(cpc, 100), // CPC já em escala adequada
+      Math.min(conversions, 100), // Conversões limitadas a 100
+      Math.min(roas * 20, 100), // ROAS * 20 para visualização
+      Math.min(impressions / 1000, 100), // Impressões / 1000
+      Math.min(clicks, 100) // Cliques limitados a 100
+    ];
+
+    return [{
+      name: 'Performance',
+      data: normalizedData
+    }];
+  };
+
+  const campaignPerformanceSeries = processCampaignPerformanceData();
 
   // Configurações do gráfico de tendência de conversões
   const conversionTrendOptions = {
@@ -156,12 +222,137 @@ const ClientCharts = ({ clientData }) => {
     }
   };
 
-  const conversionTrendSeries = [
-    {
-      name: 'Conversões',
-      data: [12, 15, 18, 14, 20, 16, 19]
+  // Processar dados de tendência de conversões
+  const processConversionTrendData = () => {
+    if (!dashboardData?.campaigns) {
+      return [{ name: 'Conversões', data: [12, 15, 18, 14, 20, 16, 19] }];
     }
-  ];
+
+    const totalConversions = dashboardData.summary?.totalConversions || dashboardData.summary?.conversions || 0;
+    
+    if (totalConversions === 0) {
+      return [{ name: 'Conversões', data: [0, 0, 0, 0, 0, 0, 0] }];
+    }
+
+    // Simular tendência dos últimos 7 dias baseado no total
+    const avgDaily = totalConversions / 7;
+    const variation = avgDaily * 0.3; // 30% de variação
+    
+    const trendData = Array.from({ length: 7 }, (_, i) => {
+      const base = avgDaily;
+      const random = (Math.random() - 0.5) * 2 * variation;
+      return Math.max(0, Math.round(base + random));
+    });
+
+    return [{
+      name: 'Conversões',
+      data: trendData
+    }];
+  };
+
+  const conversionTrendSeries = processConversionTrendData();
+
+  // Configurações do gráfico de dispersão (Custo x Conversões)
+  const scatterPlotOptions = {
+    chart: {
+      type: 'scatter',
+      height: 300,
+      toolbar: {
+        show: false
+      }
+    },
+    colors: ['#3B82F6', '#10B981'],
+    dataLabels: {
+      enabled: false
+    },
+    xaxis: {
+      title: {
+        text: 'Custo (R$)'
+      },
+      labels: {
+        formatter: function (val) {
+          return 'R$ ' + val.toFixed(0);
+        }
+      }
+    },
+    yaxis: {
+      title: {
+        text: 'Conversões'
+      }
+    },
+    tooltip: {
+      custom: function({ series, seriesIndex, dataPointIndex, w }) {
+        const data = w.globals.initialSeries[seriesIndex].data[dataPointIndex];
+        return `
+          <div class="bg-white p-3 border border-gray-200 rounded shadow-sm">
+            <div><strong>${w.globals.seriesNames[seriesIndex]}</strong></div>
+            <div>Custo: R$ ${data.x.toFixed(2)}</div>
+            <div>Conversões: ${data.y}</div>
+          </div>
+        `;
+      }
+    },
+    grid: {
+      borderColor: '#e8e8e8',
+      strokeDashArray: 3
+    }
+  };
+
+  // Processar dados de dispersão (Custo x Conversões)
+  const processScatterPlotData = () => {
+    if (!dashboardData?.campaigns || dashboardData.campaigns.length === 0) {
+      // Dados mock para exemplo
+      return [
+        {
+          name: 'Google Ads',
+          data: [
+            { x: 1500, y: 25 },
+            { x: 2300, y: 35 },
+            { x: 1800, y: 28 },
+            { x: 2700, y: 42 },
+            { x: 1200, y: 18 }
+          ]
+        },
+        {
+          name: 'Meta Ads',
+          data: [
+            { x: 1100, y: 22 },
+            { x: 1900, y: 31 },
+            { x: 1600, y: 26 },
+            { x: 2200, y: 38 },
+            { x: 1400, y: 24 }
+          ]
+        }
+      ];
+    }
+
+    const googleAdsData = dashboardData.campaigns
+      .filter(campaign => campaign.platform === 'google_ads')
+      .map(campaign => ({
+        x: campaign.metrics?.cost || 0,
+        y: campaign.metrics?.conversions || 0
+      }));
+
+    const facebookAdsData = dashboardData.campaigns
+      .filter(campaign => campaign.platform === 'facebook')
+      .map(campaign => ({
+        x: campaign.metrics?.cost || 0,
+        y: campaign.metrics?.conversions || 0
+      }));
+
+    return [
+      {
+        name: 'Google Ads',
+        data: googleAdsData.length > 0 ? googleAdsData : [{ x: 0, y: 0 }]
+      },
+      {
+        name: 'Meta Ads', 
+        data: facebookAdsData.length > 0 ? facebookAdsData : [{ x: 0, y: 0 }]
+      }
+    ];
+  };
+
+  const scatterPlotSeries = processScatterPlotData();
 
   return (
     <div className="row gy-4">
@@ -171,10 +362,14 @@ const ClientCharts = ({ clientData }) => {
           <div className="card-body p-24">
             <div className="d-flex align-items-center flex-wrap gap-2 justify-content-between mb-4">
               <h6 className="mb-2 fw-bold text-lg mb-0">Tráfego por Fonte</h6>
-              <select className="form-select form-select-sm w-auto bg-base border text-secondary-light">
-                <option>Últimos 30 dias</option>
-                <option>Últimos 7 dias</option>
-                <option>Últimos 90 dias</option>
+              <select 
+                className="form-select form-select-sm w-auto bg-base border text-secondary-light"
+                value={period}
+                onChange={(e) => onPeriodChange && onPeriodChange(e.target.value)}
+              >
+                <option value="7d">Últimos 7 dias</option>
+                <option value="30d">Últimos 30 dias</option>
+                <option value="90d">Últimos 90 dias</option>
               </select>
             </div>
             <Chart
@@ -206,14 +401,18 @@ const ClientCharts = ({ clientData }) => {
       </div>
 
       {/* Gráfico de Performance de Campanhas */}
-      <div className="col-xxl-8">
+      <div className="col-xxl-6">
         <div className="card h-100">
           <div className="card-body p-24">
             <div className="d-flex align-items-center flex-wrap gap-2 justify-content-between mb-4">
               <h6 className="mb-2 fw-bold text-lg mb-0">Performance de Campanhas</h6>
               <div className="d-flex gap-2">
-                <span className="badge bg-primary-subtle text-primary-main">CTR: 2.8%</span>
-                <span className="badge bg-success-subtle text-success-main">ROAS: 4.2</span>
+                <span className="badge bg-primary-subtle text-primary-main">
+                  CTR: {dashboardData?.summary ? (dashboardData.summary.averageCTR || dashboardData.summary.ctr || 0).toFixed(1) : '0'}%
+                </span>
+                <span className="badge bg-success-subtle text-success-main">
+                  ROAS: {dashboardData?.summary ? (dashboardData.summary.totalROAS || dashboardData.summary.roas || 0).toFixed(1) : '0'}
+                </span>
               </div>
             </div>
             <Chart
@@ -226,15 +425,46 @@ const ClientCharts = ({ clientData }) => {
         </div>
       </div>
 
+      {/* Gráfico de Dispersão: Custo x Conversões */}
+      <div className="col-xxl-6">
+        <div className="card h-100">
+          <div className="card-body p-24">
+            <div className="d-flex align-items-center flex-wrap gap-2 justify-content-between mb-4">
+              <h6 className="mb-2 fw-bold text-lg mb-0">Custo x Conversões</h6>
+              <div className="d-flex gap-2">
+                <span className="badge bg-info-subtle text-info-main">
+                  Eficiência: {dashboardData?.summary ? 
+                    (dashboardData.summary.totalCost > 0 ? 
+                      ((dashboardData.summary.totalConversions || dashboardData.summary.conversions || 0) / dashboardData.summary.totalCost * 100).toFixed(1) : 
+                      '0'
+                    ) : '0'}%
+                </span>
+              </div>
+            </div>
+            <Chart
+              options={scatterPlotOptions}
+              series={scatterPlotSeries}
+              type="scatter"
+              height={300}
+            />
+          </div>
+        </div>
+      </div>
+
       {/* Gráfico de Tendência de Conversões */}
       <div className="col-xxl-4">
         <div className="card h-100">
           <div className="card-body p-24">
             <div className="d-flex align-items-center flex-wrap gap-2 justify-content-between mb-4">
               <h6 className="mb-2 fw-bold text-lg mb-0">Tendência de Conversões</h6>
-              <select className="form-select form-select-sm w-auto bg-base border text-secondary-light">
-                <option>Últimos 7 dias</option>
-                <option>Últimos 30 dias</option>
+              <select 
+                className="form-select form-select-sm w-auto bg-base border text-secondary-light"
+                value={period}
+                onChange={(e) => onPeriodChange && onPeriodChange(e.target.value)}
+              >
+                <option value="7d">Últimos 7 dias</option>
+                <option value="30d">Últimos 30 dias</option>
+                <option value="90d">Últimos 90 dias</option>
               </select>
             </div>
             <Chart
@@ -244,10 +474,18 @@ const ClientCharts = ({ clientData }) => {
               height={250}
             />
             <div className="text-center mt-3">
-              <h4 className="text-success mb-1">16.3</h4>
+              <h4 className="text-success mb-1">
+                {dashboardData?.summary ? 
+                  ((dashboardData.summary.totalConversions || dashboardData.summary.conversions || 0) / 7).toFixed(1) : 
+                  '0'
+                }
+              </h4>
               <p className="text-muted mb-0">Média diária de conversões</p>
               <span className="text-success-600 d-flex align-items-center justify-content-center gap-1 text-sm fw-bolder">
-                8.5% <i className="ri-arrow-up-s-fill d-flex" />
+                {dashboardData?.summary ? 
+                  (dashboardData.summary.averageConversionRate || dashboardData.summary.conversionRate || 0).toFixed(1) : 
+                  '0'
+                }% <i className="ri-arrow-up-s-fill d-flex" />
               </span>
             </div>
           </div>

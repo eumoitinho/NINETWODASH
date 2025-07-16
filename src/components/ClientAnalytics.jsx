@@ -272,6 +272,7 @@ const ClientAnalytics = ({ clientSlug }) => {
           clientSlug={clientSlug}
           period={selectedPeriod}
           dashboardData={dashboardData}
+          onPeriodChange={setSelectedPeriod}
         />
       </div>
 

@@ -215,8 +215,8 @@ const MasterLayout = ({ children }) => {
                     </span>
                   </li>
                 ) : clients.length > 0 ? (
-                  clients.map((client) => (
-                    <li key={client.id}>
+                  clients.map((client, index) => (
+                    <li key={client.id || `client-${index}`}>
                       <Link
                         href={`/client-analytics/${client.slug}`}
                         className={pathname === `/client-analytics/${client.slug}` ? "active-page" : ""}
