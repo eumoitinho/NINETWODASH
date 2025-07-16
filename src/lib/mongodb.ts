@@ -541,3 +541,44 @@ export async function saveMetricsData(
   
   return campaign;
 }
+
+export async function findRecentCampaigns(clientSlug: string, period: '7d' | '30d' | '90d') {
+  await connectToDatabase();
+  
+  // Get client first
+  const client = await (Client as any).findOne({ slug: clientSlug });
+  if (!client) {
+    return [];
+  }
+  
+  // Calculate date range
+  const days = period === '7d' ? 7 : period === '30d' ? 30 : 90;
+  const startDate = new Date();
+  startDate.setDate(startDate.getDate() - days);
+  
+  // Find campaigns for the client in the period
+  const campaigns = await (Campaign as any).find({
+    clientId: client._id,
+    updatedAt: { $gte: startDate },
+    status: 'active'
+  }).sort({ updatedAt: -1 }).lean();
+  
+  return campaigns.map((campaign: any) => ({
+    campaignId: campaign.campaignId || campaign._id.toString(),
+    campaignName: campaign.campaignName,
+    platform: campaign.platform,
+    status: campaign.status,
+    date: campaign.updatedAt?.toISOString().split('T')[0] || new Date().toISOString().split('T')[0],
+    metrics: campaign.metrics?.[campaign.metrics.length - 1] || {
+      impressions: 0,
+      clicks: 0,
+      cost: 0,
+      conversions: 0,
+      ctr: 0,
+      cpc: 0,
+      cpm: 0,
+      conversionRate: 0,
+      roas: 0,
+    },
+  }));
+}

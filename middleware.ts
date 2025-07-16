@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { LRUCache } from 'lru-cache';
+import { getToken } from 'next-auth/jwt';
 
 // Rate limiting configuration
 interface RateLimitConfig {
@@ -158,15 +159,96 @@ function logAPIRequest(request: NextRequest, clientIP: string, status: string): 
 }
 
 /**
+ * Handle authentication for protected routes
+ */
+async function handleAuthentication(request: NextRequest): Promise<NextResponse> {
+  const { pathname } = request.nextUrl;
+  
+  const token = await getToken({ 
+    req: request, 
+    secret: process.env.NEXTAUTH_SECRET 
+  });
+
+  // Check if route requires authentication
+  const isProtectedRoute = PROTECTED_ROUTES.some(route => pathname.startsWith(route));
+  const isClientPortal = pathname.startsWith('/portal/');
+  
+  if ((isProtectedRoute || isClientPortal) && !token) {
+    const loginUrl = new URL('/login', request.url);
+    loginUrl.searchParams.set('callbackUrl', pathname);
+    return NextResponse.redirect(loginUrl);
+  }
+
+  // Role-based access control
+  if (token) {
+    const userRole = token.role as string;
+    
+    // Admin-only routes
+    const isAdminRoute = ADMIN_ONLY_ROUTES.some(route => pathname.startsWith(route));
+    if (isAdminRoute && userRole !== 'admin') {
+      return NextResponse.redirect(new URL('/access-denied', request.url));
+    }
+    
+    // Client portal access
+    if (pathname.startsWith('/portal/')) {
+      const clientSlug = pathname.split('/portal/')[1]?.split('/')[0];
+      
+      if (userRole === 'client') {
+        // Check if client is accessing their own portal
+        const userClientSlug = token.clientSlug as string;
+        if (clientSlug !== userClientSlug) {
+          return NextResponse.redirect(new URL('/access-denied', request.url));
+        }
+      }
+      // Admins can access any client portal
+    }
+    
+    // Redirect authenticated users away from login page
+    if (pathname === '/login' || pathname === '/sign-in') {
+      if (userRole === 'admin') {
+        return NextResponse.redirect(new URL('/dashboards', request.url));
+      } else {
+        const clientSlug = token.clientSlug as string;
+        return NextResponse.redirect(new URL(`/portal/${clientSlug}`, request.url));
+      }
+    }
+  }
+
+  return NextResponse.next();
+}
+
+// Protected routes that require authentication
+const PROTECTED_ROUTES = [
+  '/dashboards',
+  '/clients',
+  '/client-analytics',
+  '/add-client',
+  '/edit-client',
+  '/budgets',
+  '/client-tags',
+];
+
+// Admin-only routes
+const ADMIN_ONLY_ROUTES = [
+  '/dashboards',
+  '/clients',
+  '/add-client',
+  '/edit-client',
+  '/budgets',
+  '/client-tags',
+  '/api/admin',
+];
+
+/**
  * Main middleware function
  */
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const clientIP = getClientIP(request);
   
-  // Skip middleware for non-API routes
+  // Handle authentication for protected routes
   if (!pathname.startsWith('/api/')) {
-    return NextResponse.next();
+    return await handleAuthentication(request);
   }
   
   // Skip rate limiting for localhost in development
@@ -286,6 +368,7 @@ export const config = {
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
      * - public folder
+     * - assets folder
      */
     '/((?!_next/static|_next/image|favicon.ico|public|assets).*)',
   ],

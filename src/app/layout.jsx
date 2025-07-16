@@ -1,19 +1,23 @@
 import PluginInit from "@/helper/PluginInit";
+import { SessionProvider } from "@/components/providers/SessionProvider";
 import "./font.css";
 import "./globals.css";
 
-
 export const metadata = {
-  title: "WowDash NEXT JS - Admin Dashboard Multipurpose Bootstrap 5 Template",
+  title: "NINETWODASH - Dashboard de Marketing Digital",
   description:
-    "Wowdash NEXT JS is a developer-friendly, ready-to-use admin template designed for building attractive, scalable, and high-performing web applications.",
+    "NINETWODASH é o dashboard completo para acompanhar métricas de Google Ads, Facebook Ads e Google Analytics em tempo real.",
 };
 
 export default function RootLayout({ children }) {
   return (
-    <html lang='en'>
+    <html lang='pt-BR'>
       <PluginInit />
-      <body suppressHydrationWarning={true}>{children}</body>
+      <body suppressHydrationWarning={true}>
+        <SessionProvider>
+          {children}
+        </SessionProvider>
+      </body>
     </html>
   );
 }

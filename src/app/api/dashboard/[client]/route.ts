@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { withCache, generateCacheKey } from '@/lib/cache';
+import { connectToDatabase, findClientBySlug, findRecentCampaigns } from '@/lib/mongodb';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import type { 
   APIResponse, 
   ClientDashboardData, 
@@ -8,53 +11,6 @@ import type {
   Client,
   DashboardSummary 
 } from '@/types/dashboard';
-
-// Client configuration mapping
-const CLIENT_CONFIG: Record<string, Client> = {
-  'catalisti-holding': {
-    id: 16,
-    name: 'Catalisti Holding',
-    email: 'contato@catalisti.com.br',
-    status: 'active',
-    ga4Connected: true,
-    metaConnected: true,
-    lastSync: new Date().toISOString(),
-    monthlyBudget: 25000,
-    avatar: '/assets/images/avatar/avatar1.png',
-    tags: ['premium', 'holding'],
-    googleAdsCustomerId: process.env.GOOGLE_ADS_CATALISTI_ID,
-    facebookAdAccountId: process.env.FACEBOOK_CATALISTI_ID,
-  },
-  'abc-evo': {
-    id: 1,
-    name: 'ABC EVO',
-    email: 'contato@abcevo.com.br',
-    status: 'active',
-    ga4Connected: true,
-    metaConnected: true,
-    lastSync: new Date().toISOString(),
-    monthlyBudget: 15000,
-    avatar: '/assets/images/avatar/avatar2.png',
-    tags: ['tech', 'startup'],
-    googleAdsCustomerId: process.env.GOOGLE_ADS_ABC_EVO_ID,
-    facebookAdAccountId: process.env.FACEBOOK_ABC_EVO_ID,
-  },
-  'dr-victor-mauro': {
-    id: 2,
-    name: 'Dr. Victor Mauro',
-    email: 'contato@drvictor.com.br',
-    status: 'active',
-    ga4Connected: true,
-    metaConnected: true,
-    lastSync: new Date().toISOString(),
-    monthlyBudget: 8000,
-    avatar: '/assets/images/avatar/avatar3.png',
-    tags: ['healthcare', 'medical'],
-    googleAdsCustomerId: process.env.GOOGLE_ADS_DR_VICTOR_MAURO_ID,
-    facebookAdAccountId: process.env.FACEBOOK_DR_VICTOR_MAURO_ID,
-  },
-  // Add other clients as needed...
-};
 
 /**
  * GET /api/dashboard/[client]
@@ -65,6 +21,16 @@ export async function GET(
   { params }: { params: Promise<{ client: string }> }
 ): Promise<NextResponse> {
   try {
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json<APIResponse<null>>({
+        success: false,
+        error: 'UNAUTHORIZED',
+        message: 'Não autorizado',
+        timestamp: new Date().toISOString(),
+      }, { status: 401 });
+    }
+
     const { client } = await params;
     const { searchParams } = new URL(request.url);
     
@@ -72,16 +38,45 @@ export async function GET(
     const period = (searchParams.get('period') as '7d' | '30d' | '90d') || '30d';
     const useCache = searchParams.get('cache') !== 'false';
 
-    // Validate client
-    const clientConfig = CLIENT_CONFIG[client];
-    if (!clientConfig) {
+    // Connect to database
+    await connectToDatabase();
+
+    // Validate client exists
+    const clientData = await findClientBySlug(client);
+    if (!clientData) {
       return NextResponse.json<APIResponse<null>>({
         success: false,
         error: 'CLIENT_NOT_FOUND',
-        message: `Client '${client}' not found`,
+        message: `Cliente '${client}' não encontrado`,
         timestamp: new Date().toISOString(),
       }, { status: 404 });
     }
+
+    // Check if user has access to this client
+    if (session.user.role !== 'admin' && (session.user as any).clientSlug !== client) {
+      return NextResponse.json<APIResponse<null>>({
+        success: false,
+        error: 'ACCESS_DENIED',
+        message: 'Acesso negado a este cliente',
+        timestamp: new Date().toISOString(),
+      }, { status: 403 });
+    }
+
+    // Convert MongoDB client to Client type
+    const clientConfig: Client = {
+      id: clientData._id.toString(),
+      name: clientData.name,
+      email: clientData.email,
+      status: clientData.status,
+      ga4Connected: clientData.googleAnalytics?.connected || false,
+      metaConnected: clientData.facebookAds?.connected || false,
+      lastSync: clientData.updatedAt || new Date().toISOString(),
+      monthlyBudget: clientData.monthlyBudget,
+      avatar: clientData.avatar,
+      tags: clientData.tags,
+      googleAdsCustomerId: clientData.googleAds?.customerId,
+      facebookAdAccountId: clientData.facebookAds?.accountId,
+    };
 
     // Check if mock data is enabled
     const useMockData = process.env.USE_MOCK_DATA === 'true';
@@ -102,17 +97,24 @@ export async function GET(
 
     // Define fetch function
     const fetchData = async (): Promise<ClientDashboardData> => {
+      // Get date range
+      const dateRange = getDateRange(period);
+      
+      // Fetch campaigns from database for the period
+      const campaigns = await findRecentCampaigns(client, period);
+      
+      // Fetch data from APIs if credentials are configured
       const [googleAdsData, facebookAdsData] = await Promise.allSettled([
-        fetchGoogleAdsData(client, period),
-        fetchFacebookAdsData(client, period),
+        clientData.googleAds?.connected ? fetchGoogleAdsData(client, period, clientData) : Promise.resolve(null),
+        clientData.facebookAds?.connected ? fetchFacebookAdsData(client, period, clientData) : Promise.resolve(null),
       ]);
 
-      // Process results
+      // Process API results
       const googleMetrics = googleAdsData.status === 'fulfilled' ? googleAdsData.value : null;
       const facebookMetrics = facebookAdsData.status === 'fulfilled' ? facebookAdsData.value : null;
 
-      // Combine campaigns from both platforms
-      const allCampaigns: Campaign[] = [];
+      // Combine database campaigns with API campaigns
+      const allCampaigns: Campaign[] = [...campaigns];
       if (googleMetrics?.campaigns) {
         allCampaigns.push(...googleMetrics.campaigns);
       }
@@ -120,14 +122,12 @@ export async function GET(
         allCampaigns.push(...facebookMetrics.campaigns);
       }
 
-      // Calculate consolidated summary
+      // Calculate consolidated summary from database and API data
       const summary = calculateConsolidatedSummary(
         googleMetrics?.summary,
-        facebookMetrics?.summary
+        facebookMetrics?.summary,
+        campaigns
       );
-
-      // Get date range
-      const dateRange = getDateRange(period);
 
       return {
         client: clientConfig,
@@ -138,6 +138,7 @@ export async function GET(
         dataSource: {
           googleAds: googleAdsData.status === 'fulfilled',
           facebookAds: facebookAdsData.status === 'fulfilled',
+          database: campaigns.length > 0,
           mock: false,
         },
       };
@@ -173,8 +174,13 @@ export async function GET(
 /**
  * Fetch Google Ads data from internal API
  */
-async function fetchGoogleAdsData(client: string, period: string) {
+async function fetchGoogleAdsData(client: string, period: string, clientData: any) {
   try {
+    // Only fetch if Google Ads is connected and has credentials
+    if (!clientData.googleAds?.connected || !clientData.googleAds?.customerId) {
+      return null;
+    }
+
     const response = await fetch(
       `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/google-ads/${client}?period=${period}&type=summary`,
       {
@@ -202,8 +208,13 @@ async function fetchGoogleAdsData(client: string, period: string) {
 /**
  * Fetch Facebook Ads data from internal API
  */
-async function fetchFacebookAdsData(client: string, period: string) {
+async function fetchFacebookAdsData(client: string, period: string, clientData: any) {
   try {
+    // Only fetch if Facebook Ads is connected and has credentials
+    if (!clientData.facebookAds?.connected || !clientData.facebookAds?.accountId) {
+      return null;
+    }
+
     const response = await fetch(
       `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/facebook-ads/${client}?period=${period}&type=summary`,
       {
@@ -229,11 +240,12 @@ async function fetchFacebookAdsData(client: string, period: string) {
 }
 
 /**
- * Calculate consolidated summary from Google Ads and Facebook Ads data
+ * Calculate consolidated summary from Google Ads, Facebook Ads and database data
  */
 function calculateConsolidatedSummary(
   googleMetrics?: CampaignMetrics | null,
-  facebookMetrics?: CampaignMetrics | null
+  facebookMetrics?: CampaignMetrics | null,
+  dbCampaigns?: Campaign[]
 ): DashboardSummary {
   const google = googleMetrics || {
     impressions: 0, clicks: 0, cost: 0, conversions: 0,
@@ -245,10 +257,18 @@ function calculateConsolidatedSummary(
     ctr: 0, cpc: 0, cpm: 0, conversionRate: 0, roas: 0
   };
 
-  const totalImpressions = google.impressions + facebook.impressions;
-  const totalClicks = google.clicks + facebook.clicks;
-  const totalCost = google.cost + facebook.cost;
-  const totalConversions = google.conversions + facebook.conversions;
+  // Calculate totals from database campaigns
+  const dbTotals = dbCampaigns?.reduce((acc, campaign) => ({
+    impressions: acc.impressions + (campaign.metrics?.impressions || 0),
+    clicks: acc.clicks + (campaign.metrics?.clicks || 0),
+    cost: acc.cost + (campaign.metrics?.cost || 0),
+    conversions: acc.conversions + (campaign.metrics?.conversions || 0),
+  }), { impressions: 0, clicks: 0, cost: 0, conversions: 0 }) || { impressions: 0, clicks: 0, cost: 0, conversions: 0 };
+
+  const totalImpressions = google.impressions + facebook.impressions + dbTotals.impressions;
+  const totalClicks = google.clicks + facebook.clicks + dbTotals.clicks;
+  const totalCost = google.cost + facebook.cost + dbTotals.cost;
+  const totalConversions = google.conversions + facebook.conversions + dbTotals.conversions;
 
   return {
     totalImpressions,
