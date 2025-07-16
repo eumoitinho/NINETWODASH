@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '../../../../../../lib/auth';
-import { testAllConnections } from '../../../../../../lib/client-credentials';
-import type { APIResponse } from '../../../../../../types/dashboard';
+import { authOptions } from '@/lib/auth';
+import { testAllConnections } from '@/lib/client-credentials';
+import type { APIResponse } from '@/types/dashboard';
 
 /**
  * POST /api/admin/clients/[id]/test-connections

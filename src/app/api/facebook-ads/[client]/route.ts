@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createFacebookAdsClient, getFacebookDateRange } from '../../../../lib/facebook-ads';
-import { withCache, generateCacheKey } from '../../../../lib/cache';
-import type { APIResponse, CampaignMetrics, Campaign } from '../../../../types/dashboard';
+import { createFacebookAdsClient, getFacebookDateRange } from '@/lib/facebook-ads';
+import { withCache, generateCacheKey } from '@/lib/cache';
+import type { APIResponse, CampaignMetrics, Campaign } from '@/types/dashboard';
 
 // Client ID to Facebook Ad Account ID mapping
 const CLIENT_FACEBOOK_ADS_MAPPING: Record<string, { adAccountId: string; pixelId?: string }> = {

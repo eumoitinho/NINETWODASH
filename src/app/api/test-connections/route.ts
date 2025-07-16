@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createGoogleAdsClient } from '../../../../lib/google-ads';
-import { createFacebookAdsClient, validateFacebookToken } from '../../../../lib/facebook-ads';
-import { getCacheStats } from '../../../../lib/cache';
-import type { APIResponse } from '../../../../types/dashboard';
+import { createGoogleAdsClient } from '@/lib/google-ads';
+import { createFacebookAdsClient, validateFacebookToken } from '@/lib/facebook-ads';
+import { getCacheStats } from '@/lib/cache';
+import type { APIResponse } from '@/types/dashboard';
 
 interface ConnectionTestResult {
   service: string;

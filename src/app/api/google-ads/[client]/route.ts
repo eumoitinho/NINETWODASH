@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createGoogleAdsClient, getDateRange } from '../../../../lib/google-ads';
-import { withCache, generateCacheKey } from '../../../../lib/cache';
-import type { APIResponse, CampaignMetrics, Campaign } from '../../../../types/dashboard';
+import { createGoogleAdsClient, getDateRange } from '@/lib/google-ads';
+import { withCache, generateCacheKey } from '@/lib/cache';
+import type { APIResponse, CampaignMetrics, Campaign } from '@/types/dashboard';
 
 // Client ID to Google Ads Customer ID mapping
 const CLIENT_GOOGLE_ADS_MAPPING: Record<string, string> = {

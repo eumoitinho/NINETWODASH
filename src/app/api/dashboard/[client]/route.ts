@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { withCache, generateCacheKey } from '../../../../lib/cache';
+import { withCache, generateCacheKey } from '@/lib/cache';
 import type { 
   APIResponse, 
   ClientDashboardData, 
@@ -7,7 +7,7 @@ import type {
   Campaign, 
   Client,
   DashboardSummary 
-} from '../../../../types/dashboard';
+} from '@/types/dashboard';
 
 // Client configuration mapping
 const CLIENT_CONFIG: Record<string, Client> = {
