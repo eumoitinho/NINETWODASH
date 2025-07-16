@@ -82,11 +82,46 @@ const DashboardsList = () => {
     );
   };
 
+  const getConnectionBadge = (connected, label) => {
+    return connected ? (
+      <span className="badge bg-success-subtle text-success-main">
+        <Icon icon="solar:check-circle-bold" className="me-1" />
+        {label}
+      </span>
+    ) : (
+      <span className="badge bg-danger-subtle text-danger-main">
+        <Icon icon="solar:close-circle-bold" className="me-1" />
+        {label}
+      </span>
+    );
+  };
+
   const formatDate = (dateString) => {
     if (!dateString) return 'Não sincronizado';
     
     const date = new Date(dateString);
-    return date.toLocaleDateString('pt-BR');
+    return date.toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const getLastSyncDate = (client) => {
+    const dates = [
+      client.googleAnalyticsLastSync,
+      client.googleAdsLastSync,
+      client.facebookAdsLastSync
+    ].filter(date => date);
+    
+    if (dates.length === 0) return null;
+    
+    // Retorna a data mais recente
+    return dates.reduce((latest, current) => {
+      return new Date(current) > new Date(latest) ? current : latest;
+    });
   };
 
   if (isLoading) {
@@ -226,25 +261,10 @@ const DashboardsList = () => {
 
                     {/* Status de Conexão */}
                     <div className="mb-3">
-                      <div className="row text-center">
-                        <div className="col-4">
-                          <div className="d-flex align-items-center justify-content-center mb-1">
-                            {getConnectionStatus(client.googleAnalyticsConnected)}
-                          </div>
-                          <small className="text-muted">Analytics</small>
-                        </div>
-                        <div className="col-4">
-                          <div className="d-flex align-items-center justify-content-center mb-1">
-                            {getConnectionStatus(client.googleAdsConnected)}
-                          </div>
-                          <small className="text-muted">Google Ads</small>
-                        </div>
-                        <div className="col-4">
-                          <div className="d-flex align-items-center justify-content-center mb-1">
-                            {getConnectionStatus(client.facebookAdsConnected)}
-                          </div>
-                          <small className="text-muted">Meta Ads</small>
-                        </div>
+                      <div className="d-flex flex-wrap gap-2">
+                        {getConnectionBadge(client.googleAnalyticsConnected, 'Analytics')}
+                        {getConnectionBadge(client.googleAdsConnected, 'Google Ads')}
+                        {getConnectionBadge(client.facebookAdsConnected, 'Meta Ads')}
                       </div>
                     </div>
 
@@ -259,7 +279,7 @@ const DashboardsList = () => {
                         </div>
                         <div className="col-6">
                           <h6 className="mb-1 text-success">
-                            {formatDate(client.googleAnalyticsLastSync || client.googleAdsLastSync || client.facebookAdsLastSync)}
+                            {formatDate(getLastSyncDate(client))}
                           </h6>
                           <small className="text-muted">Última Sincronização</small>
                         </div>
