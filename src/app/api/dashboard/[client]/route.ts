@@ -88,40 +88,50 @@ export async function GET(
       type: 'dashboard'
     });
 
+    // Get date range
+    const dateRange = getDateRange(period);
+    
+    // Fetch campaigns from database for the period
+    const campaigns = await findRecentCampaigns(client, period);
+    
+    // Fetch data from APIs if credentials are configured
+    let googleMetrics = null;
+    let facebookMetrics = null;
+    
+    try {
+      if (clientData.googleAdsConnected) {
+        googleMetrics = await fetchGoogleAdsData(client, period, clientData);
+      }
+    } catch (error) {
+      console.error('Error fetching Google Ads data:', error);
+    }
+    
+    try {
+      if (clientData.facebookAdsConnected) {
+        facebookMetrics = await fetchFacebookAdsData(client, period, clientData);
+      }
+    } catch (error) {
+      console.error('Error fetching Facebook Ads data:', error);
+    }
+
+    // Combine database campaigns with API campaigns
+    const allCampaigns: Campaign[] = [...campaigns];
+    if (googleMetrics?.campaigns) {
+      allCampaigns.push(...googleMetrics.campaigns);
+    }
+    if (facebookMetrics?.campaigns) {
+      allCampaigns.push(...facebookMetrics.campaigns);
+    }
+
+    // Calculate consolidated summary from database and API data
+    const summary = calculateConsolidatedSummary(
+      googleMetrics?.summary,
+      facebookMetrics?.summary,
+      campaigns
+    );
+
     // Define fetch function
     const fetchData = async (): Promise<ClientDashboardData> => {
-      // Get date range
-      const dateRange = getDateRange(period);
-      
-      // Fetch campaigns from database for the period
-      const campaigns = await findRecentCampaigns(client, period);
-      
-      // Fetch data from APIs if credentials are configured
-      const [googleAdsData, facebookAdsData] = await Promise.allSettled([
-        clientData.googleAdsConnected ? fetchGoogleAdsData(client, period, clientData) : Promise.resolve(null),
-        clientData.facebookAdsConnected ? fetchFacebookAdsData(client, period, clientData) : Promise.resolve(null),
-      ]);
-
-      // Process API results
-      const googleMetrics = googleAdsData.status === 'fulfilled' ? googleAdsData.value : null;
-      const facebookMetrics = facebookAdsData.status === 'fulfilled' ? facebookAdsData.value : null;
-
-      // Combine database campaigns with API campaigns
-      const allCampaigns: Campaign[] = [...campaigns];
-      if (googleMetrics?.campaigns) {
-        allCampaigns.push(...googleMetrics.campaigns);
-      }
-      if (facebookMetrics?.campaigns) {
-        allCampaigns.push(...facebookMetrics.campaigns);
-      }
-
-      // Calculate consolidated summary from database and API data
-      const summary = calculateConsolidatedSummary(
-        googleMetrics?.summary,
-        facebookMetrics?.summary,
-        campaigns
-      );
-
       return {
         client: clientConfig,
         dateRange,
@@ -129,21 +139,15 @@ export async function GET(
         campaigns: allCampaigns,
         lastUpdated: new Date().toISOString(),
         dataSource: {
-          googleAds: googleAdsData.status === 'fulfilled',
-          facebookAds: facebookAdsData.status === 'fulfilled',
+          googleAds: googleMetrics !== null,
+          facebookAds: facebookMetrics !== null,
           mock: false,
-          // Removido o campo 'database' pois não existe em 'DataSource'
         },
       };
     };
 
-    // Fetch data with cache
-    let data: ClientDashboardData;
-    if (useCache) {
-      data = await withCache('client', cacheKey, fetchData);
-    } else {
-      data = await fetchData();
-    }
+    // Return data (cache temporarily disabled to fix promise issues)
+    const data = await fetchData();
 
     return NextResponse.json<APIResponse<ClientDashboardData>>({
       success: true,
