@@ -3,10 +3,11 @@
  * Handles authentication for admin users and client portal access
  */
 
-import { type AuthOptions } from 'next-auth';
+import type { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
+import bcrypt from 'bcryptjs';
 
-export const authOptions: AuthOptions = {
+export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
       id: 'credentials',
@@ -120,7 +121,6 @@ export function generateRandomPassword(length: number = 12): string {
  * Hash password using bcryptjs
  */
 export async function hashPassword(password: string): Promise<string> {
-  const bcrypt = require('bcryptjs');
   const saltRounds = 12;
   return await bcrypt.hash(password, saltRounds);
 }
@@ -129,6 +129,5 @@ export async function hashPassword(password: string): Promise<string> {
  * Verify password using bcryptjs
  */
 export async function verifyPassword(password: string, hashedPassword: string): Promise<boolean> {
-  const bcrypt = require('bcryptjs');
   return await bcrypt.compare(password, hashedPassword);
 }
