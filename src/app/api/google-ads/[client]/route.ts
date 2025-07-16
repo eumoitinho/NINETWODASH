@@ -1,31 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createGoogleAdsClient, getDateRange } from '@/lib/google-ads';
 import { withCache, generateCacheKey } from '@/lib/cache';
+import { connectToDatabase, Client } from '@/lib/mongodb';
 import type { APIResponse, CampaignMetrics, Campaign } from '@/types/dashboard';
-
-// Client ID to Google Ads Customer ID mapping
-const CLIENT_GOOGLE_ADS_MAPPING: Record<string, string> = {
-  'catalisti-holding': process.env.GOOGLE_ADS_CATALISTI_ID || '',
-  'abc-evo': process.env.GOOGLE_ADS_ABC_EVO_ID || '',
-  'dr-victor-mauro': process.env.GOOGLE_ADS_DR_VICTOR_MAURO_ID || '',
-  'dr-percio': process.env.GOOGLE_ADS_DR_PERCIO_ID || '',
-  'cwtrends': process.env.GOOGLE_ADS_CWTRENDS_ID || '',
-  'global-best-part': process.env.GOOGLE_ADS_GLOBAL_BEST_PART_ID || '',
-  'lj-santos': process.env.GOOGLE_ADS_LJ_SANTOS_ID || '',
-  'favretto-midia-exterior': process.env.GOOGLE_ADS_FAVRETTO_MIDIA_ID || '',
-  'favretto-comunicacao-visual': process.env.GOOGLE_ADS_FAVRETTO_COMUNICACAO_ID || '',
-  'mundial': process.env.GOOGLE_ADS_MUNDIAL_ID || '',
-  'naframe': process.env.GOOGLE_ADS_NAFRAME_ID || '',
-  'motin-films': process.env.GOOGLE_ADS_MOTIN_FILMS_ID || '',
-  'naport': process.env.GOOGLE_ADS_NAPORT_ID || '',
-  'autoconnect-prime': process.env.GOOGLE_ADS_AUTOCONNECT_PRIME_ID || '',
-  'vtelco-networks': process.env.GOOGLE_ADS_VTELCO_NETWORKS_ID || '',
-  'amitech': process.env.GOOGLE_ADS_AMITECH_ID || '',
-  'hogrefe-construtora': process.env.GOOGLE_ADS_HOGREFE_CONSTRUTORA_ID || '',
-  'colaco-engenharia': process.env.GOOGLE_ADS_COLACO_ENGENHARIA_ID || '',
-  'pesados-web': process.env.GOOGLE_ADS_PESADOS_WEB_ID || '',
-  'eleva-corpo-e-alma': process.env.GOOGLE_ADS_ELEVA_CORPO_ALMA_ID || '',
-};
 
 /**
  * GET /api/google-ads/[client]
@@ -44,15 +21,27 @@ export async function GET(
     const type = searchParams.get('type') || 'summary'; // 'summary' | 'campaigns'
     const useCache = searchParams.get('cache') !== 'false';
 
-    // Validate client
-    const customerId = CLIENT_GOOGLE_ADS_MAPPING[client];
-    if (!customerId) {
+    // Connect to database and get client configuration
+    await connectToDatabase();
+    const clientData = await (Client as any).findOne({ slug: client });
+    
+    if (!clientData) {
       return NextResponse.json<APIResponse<null>>({
         success: false,
         error: 'CLIENT_NOT_FOUND',
-        message: `Client '${client}' not found or not configured for Google Ads`,
+        message: `Client '${client}' not found`,
         timestamp: new Date().toISOString(),
       }, { status: 404 });
+    }
+
+    // Check if Google Ads is configured for this client
+    if (!clientData.googleAds?.customerId) {
+      return NextResponse.json<APIResponse<null>>({
+        success: false,
+        error: 'GOOGLE_ADS_NOT_CONFIGURED',
+        message: `Google Ads not configured for client '${client}'`,
+        timestamp: new Date().toISOString(),
+      }, { status: 400 });
     }
 
     // Check if mock data is enabled
@@ -83,7 +72,7 @@ export async function GET(
     const dateRange = getDateRange(period);
     
     // Create Google Ads client
-    const googleAdsClient = createGoogleAdsClient(customerId);
+    const googleAdsClient = createGoogleAdsClient(clientData.googleAds.customerId);
 
     // Generate cache key
     const cacheKey = generateCacheKey('campaign', client, { 
@@ -140,20 +129,44 @@ export async function POST(
   try {
     const { client } = await params;
     
-    // Validate client
-    const customerId = CLIENT_GOOGLE_ADS_MAPPING[client];
-    if (!customerId) {
+    // Connect to database and get client configuration
+    await connectToDatabase();
+    const clientData = await (Client as any).findOne({ slug: client });
+    
+    if (!clientData) {
       return NextResponse.json<APIResponse<null>>({
         success: false,
         error: 'CLIENT_NOT_FOUND',
-        message: `Client '${client}' not found or not configured for Google Ads`,
+        message: `Client '${client}' not found`,
         timestamp: new Date().toISOString(),
       }, { status: 404 });
     }
 
+    // Check if Google Ads is configured for this client
+    if (!clientData.googleAds?.customerId) {
+      return NextResponse.json<APIResponse<null>>({
+        success: false,
+        error: 'GOOGLE_ADS_NOT_CONFIGURED',
+        message: `Google Ads not configured for client '${client}'`,
+        timestamp: new Date().toISOString(),
+      }, { status: 400 });
+    }
+
     // Create Google Ads client and test connection
-    const googleAdsClient = createGoogleAdsClient(customerId);
+    const googleAdsClient = createGoogleAdsClient(clientData.googleAds.customerId);
     const isConnected = await googleAdsClient.testConnection();
+
+    // Update connection status in database
+    await (Client as any).updateOne(
+      { slug: client },
+      { 
+        $set: { 
+          'googleAds.connected': isConnected,
+          'googleAds.lastSync': isConnected ? new Date() : null,
+          updatedAt: new Date()
+        } 
+      }
+    );
 
     return NextResponse.json<APIResponse<{ connected: boolean }>>({
       success: true,
@@ -199,7 +212,7 @@ function getMockData(client: string, type: string, period: '7d' | '30d' | '90d')
         platform: 'google_ads',
         status: 'active',
         date: new Date().toISOString().split('T')[0],
-        metrics: { ...baseMetrics, impressions: 8000, clicks: 250, cost: 1500 },
+        metrics: { ...baseMetrics, impressions: 9000, clicks: 270, cost: 1500 },
       },
       {
         campaignId: 'google_ads_campaign_2',
@@ -207,7 +220,7 @@ function getMockData(client: string, type: string, period: '7d' | '30d' | '90d')
         platform: 'google_ads',
         status: 'active',
         date: new Date().toISOString().split('T')[0],
-        metrics: { ...baseMetrics, impressions: 7000, clicks: 200, cost: 1000 },
+        metrics: { ...baseMetrics, impressions: 6000, clicks: 180, cost: 1000 },
       },
     ];
   }

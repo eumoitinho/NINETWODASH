@@ -1,91 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createFacebookAdsClient, getFacebookDateRange } from '@/lib/facebook-ads';
 import { withCache, generateCacheKey } from '@/lib/cache';
+import { connectToDatabase, Client } from '@/lib/mongodb';
 import type { APIResponse, CampaignMetrics, Campaign } from '@/types/dashboard';
-
-// Client ID to Facebook Ad Account ID mapping
-const CLIENT_FACEBOOK_ADS_MAPPING: Record<string, { adAccountId: string; pixelId?: string }> = {
-  'catalisti-holding': { 
-    adAccountId: process.env.FACEBOOK_CATALISTI_ID || '',
-    pixelId: process.env.FACEBOOK_CATALISTI_PIXEL_ID 
-  },
-  'abc-evo': { 
-    adAccountId: process.env.FACEBOOK_ABC_EVO_ID || '',
-    pixelId: process.env.FACEBOOK_ABC_EVO_PIXEL_ID 
-  },
-  'dr-victor-mauro': { 
-    adAccountId: process.env.FACEBOOK_DR_VICTOR_MAURO_ID || '',
-    pixelId: process.env.FACEBOOK_DR_VICTOR_MAURO_PIXEL_ID 
-  },
-  'dr-percio': { 
-    adAccountId: process.env.FACEBOOK_DR_PERCIO_ID || '',
-    pixelId: process.env.FACEBOOK_DR_PERCIO_PIXEL_ID 
-  },
-  'cwtrends': { 
-    adAccountId: process.env.FACEBOOK_CWTRENDS_ID || '',
-    pixelId: process.env.FACEBOOK_CWTRENDS_PIXEL_ID 
-  },
-  'global-best-part': { 
-    adAccountId: process.env.FACEBOOK_GLOBAL_BEST_PART_ID || '',
-    pixelId: process.env.FACEBOOK_GLOBAL_BEST_PART_PIXEL_ID 
-  },
-  'lj-santos': { 
-    adAccountId: process.env.FACEBOOK_LJ_SANTOS_ID || '',
-    pixelId: process.env.FACEBOOK_LJ_SANTOS_PIXEL_ID 
-  },
-  'favretto-midia-exterior': { 
-    adAccountId: process.env.FACEBOOK_FAVRETTO_MIDIA_ID || '',
-    pixelId: process.env.FACEBOOK_FAVRETTO_MIDIA_PIXEL_ID 
-  },
-  'favretto-comunicacao-visual': { 
-    adAccountId: process.env.FACEBOOK_FAVRETTO_COMUNICACAO_ID || '',
-    pixelId: process.env.FACEBOOK_FAVRETTO_COMUNICACAO_PIXEL_ID 
-  },
-  'mundial': { 
-    adAccountId: process.env.FACEBOOK_MUNDIAL_ID || '',
-    pixelId: process.env.FACEBOOK_MUNDIAL_PIXEL_ID 
-  },
-  'naframe': { 
-    adAccountId: process.env.FACEBOOK_NAFRAME_ID || '',
-    pixelId: process.env.FACEBOOK_NAFRAME_PIXEL_ID 
-  },
-  'motin-films': { 
-    adAccountId: process.env.FACEBOOK_MOTIN_FILMS_ID || '',
-    pixelId: process.env.FACEBOOK_MOTIN_FILMS_PIXEL_ID 
-  },
-  'naport': { 
-    adAccountId: process.env.FACEBOOK_NAPORT_ID || '',
-    pixelId: process.env.FACEBOOK_NAPORT_PIXEL_ID 
-  },
-  'autoconnect-prime': { 
-    adAccountId: process.env.FACEBOOK_AUTOCONNECT_PRIME_ID || '',
-    pixelId: process.env.FACEBOOK_AUTOCONNECT_PRIME_PIXEL_ID 
-  },
-  'vtelco-networks': { 
-    adAccountId: process.env.FACEBOOK_VTELCO_NETWORKS_ID || '',
-    pixelId: process.env.FACEBOOK_VTELCO_NETWORKS_PIXEL_ID 
-  },
-  'amitech': { 
-    adAccountId: process.env.FACEBOOK_AMITECH_ID || '',
-    pixelId: process.env.FACEBOOK_AMITECH_PIXEL_ID 
-  },
-  'hogrefe-construtora': { 
-    adAccountId: process.env.FACEBOOK_HOGREFE_CONSTRUTORA_ID || '',
-    pixelId: process.env.FACEBOOK_HOGREFE_CONSTRUTORA_PIXEL_ID 
-  },
-  'colaco-engenharia': { 
-    adAccountId: process.env.FACEBOOK_COLACO_ENGENHARIA_ID || '',
-    pixelId: process.env.FACEBOOK_COLACO_ENGENHARIA_PIXEL_ID 
-  },
-  'pesados-web': { 
-    adAccountId: process.env.FACEBOOK_PESADOS_WEB_ID || '',
-    pixelId: process.env.FACEBOOK_PESADOS_WEB_PIXEL_ID 
-  },
-  'eleva-corpo-e-alma': { 
-    adAccountId: process.env.FACEBOOK_ELEVA_CORPO_ALMA_ID || '',
-    pixelId: process.env.FACEBOOK_ELEVA_CORPO_ALMA_PIXEL_ID 
-  },
-};
 
 /**
  * GET /api/facebook-ads/[client]
@@ -104,15 +21,27 @@ export async function GET(
     const type = searchParams.get('type') || 'summary'; // 'summary' | 'campaigns' | 'insights' | 'creatives'
     const useCache = searchParams.get('cache') !== 'false';
 
-    // Validate client
-    const clientConfig = CLIENT_FACEBOOK_ADS_MAPPING[client];
-    if (!clientConfig || !clientConfig.adAccountId) {
+    // Connect to database and get client configuration
+    await connectToDatabase();
+    const clientData = await (Client as any).findOne({ slug: client });
+    
+    if (!clientData) {
       return NextResponse.json<APIResponse<null>>({
         success: false,
         error: 'CLIENT_NOT_FOUND',
-        message: `Client '${client}' not found or not configured for Facebook Ads`,
+        message: `Client '${client}' not found`,
         timestamp: new Date().toISOString(),
       }, { status: 404 });
+    }
+
+    // Check if Facebook Ads is configured for this client
+    if (!clientData.facebookAds?.accountId) {
+      return NextResponse.json<APIResponse<null>>({
+        success: false,
+        error: 'FACEBOOK_ADS_NOT_CONFIGURED',
+        message: `Facebook Ads not configured for client '${client}'`,
+        timestamp: new Date().toISOString(),
+      }, { status: 400 });
     }
 
     // Check if mock data is enabled
@@ -143,8 +72,8 @@ export async function GET(
     
     // Create Facebook Ads client
     const facebookAdsClient = createFacebookAdsClient(
-      clientConfig.adAccountId, 
-      clientConfig.pixelId
+      clientData.facebookAds.accountId, 
+      clientData.facebookAds.pixelId
     );
 
     // Generate cache key
@@ -210,23 +139,47 @@ export async function POST(
   try {
     const { client } = await params;
     
-    // Validate client
-    const clientConfig = CLIENT_FACEBOOK_ADS_MAPPING[client];
-    if (!clientConfig || !clientConfig.adAccountId) {
+    // Connect to database and get client configuration
+    await connectToDatabase();
+    const clientData = await (Client as any).findOne({ slug: client });
+    
+    if (!clientData) {
       return NextResponse.json<APIResponse<null>>({
         success: false,
         error: 'CLIENT_NOT_FOUND',
-        message: `Client '${client}' not found or not configured for Facebook Ads`,
+        message: `Client '${client}' not found`,
         timestamp: new Date().toISOString(),
       }, { status: 404 });
     }
 
+    // Check if Facebook Ads is configured for this client
+    if (!clientData.facebookAds?.accountId) {
+      return NextResponse.json<APIResponse<null>>({
+        success: false,
+        error: 'FACEBOOK_ADS_NOT_CONFIGURED',
+        message: `Facebook Ads not configured for client '${client}'`,
+        timestamp: new Date().toISOString(),
+      }, { status: 400 });
+    }
+
     // Create Facebook Ads client and test connection
     const facebookAdsClient = createFacebookAdsClient(
-      clientConfig.adAccountId, 
-      clientConfig.pixelId
+      clientData.facebookAds.accountId, 
+      clientData.facebookAds.pixelId
     );
     const isConnected = await facebookAdsClient.testConnection();
+
+    // Update connection status in database
+    await (Client as any).updateOne(
+      { slug: client },
+      { 
+        $set: { 
+          'facebookAds.connected': isConnected,
+          'facebookAds.lastSync': isConnected ? new Date() : null,
+          updatedAt: new Date()
+        } 
+      }
+    );
 
     return NextResponse.json<APIResponse<{ connected: boolean }>>({
       success: true,

@@ -70,10 +70,12 @@ const handler = NextAuth({
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.role = user.role;
-        token.clientId = user.clientId;
-        token.clientSlug = user.clientSlug;
-        token.avatar = user.avatar;
+        // Fazendo type assertion para acessar propriedades customizadas
+        const customUser = user as { role?: string; clientId?: string; clientSlug?: string; avatar?: string };
+        token.role = customUser.role;
+        token.clientId = customUser.clientId;
+        token.clientSlug = customUser.clientSlug;
+        token.avatar = customUser.avatar;
       }
       return token;
     },

@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { withCache, generateCacheKey } from '@/lib/cache';
 import { connectToDatabase, findClientBySlug, findRecentCampaigns } from '@/lib/mongodb';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import type { 
   APIResponse, 
   ClientDashboardData, 
@@ -11,6 +10,7 @@ import type {
   Client,
   DashboardSummary 
 } from '@/types/dashboard';
+import { authOptions } from '@/lib/auth';
 
 /**
  * GET /api/dashboard/[client]
@@ -52,8 +52,10 @@ export async function GET(
       }, { status: 404 });
     }
 
-    // Check if user has access to this client
-    if (session.user.role !== 'admin' && (session.user as any).clientSlug !== client) {
+    // Verifica se o usuário tem acesso a este cliente
+    const userRole = (session.user as any).role;
+    const userClientSlug = (session.user as any).clientSlug;
+    if (userRole !== 'admin' && userClientSlug !== client) {
       return NextResponse.json<APIResponse<null>>({
         success: false,
         error: 'ACCESS_DENIED',
@@ -138,8 +140,8 @@ export async function GET(
         dataSource: {
           googleAds: googleAdsData.status === 'fulfilled',
           facebookAds: facebookAdsData.status === 'fulfilled',
-          database: campaigns.length > 0,
           mock: false,
+          // Removido o campo 'database' pois não existe em 'DataSource'
         },
       };
     };
