@@ -159,7 +159,7 @@ const ClientCharts = ({ clientSlug, period, dashboardData, onPeriodChange }) => 
   // Processar dados de performance de campanhas
   const processCampaignPerformanceData = () => {
     if (!dashboardData?.summary) {
-      return [{ name: 'Performance', data: [2.8, 1.2, 85, 4.2, 95, 78] }];
+      return [{ name: 'Performance', data: [0, 0, 0, 0, 0, 0] }];
     }
 
     const summary = dashboardData.summary;
@@ -225,7 +225,7 @@ const ClientCharts = ({ clientSlug, period, dashboardData, onPeriodChange }) => 
   // Processar dados de tendência de conversões
   const processConversionTrendData = () => {
     if (!dashboardData?.campaigns) {
-      return [{ name: 'Conversões', data: [12, 15, 18, 14, 20, 16, 19] }];
+      return [{ name: 'Conversões', data: [0, 0, 0, 0, 0, 0, 0] }];
     }
 
     const totalConversions = dashboardData.summary?.totalConversions || dashboardData.summary?.conversions || 0;
