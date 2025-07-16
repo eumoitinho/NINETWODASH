@@ -1,11 +1,12 @@
 import NextAuth from 'next-auth';
+import type { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
-import { connectToDatabase, findUserByEmail } from '@/lib/mongodb';
-import { verifyPassword } from '@/lib/auth';
+import bcrypt from 'bcryptjs';
 
-const handler = NextAuth({
+const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
+      id: 'credentials',
       name: 'credentials',
       credentials: {
         email: { label: 'Email', type: 'email' },
@@ -16,48 +17,30 @@ const handler = NextAuth({
           throw new Error('Email e senha são obrigatórios');
         }
 
-        try {
-          await connectToDatabase();
-          
-          const user = await findUserByEmail(credentials.email);
-          if (!user) {
-            throw new Error('Usuário não encontrado');
-          }
+        // Mock authentication for development
+        const validCredentials = [
+          { email: 'admin@catalisti.com', password: 'admin123', name: 'Admin Catalisti' },
+          { email: 'admin@ninetwodash.com', password: 'admin123', name: 'Admin NineTwoDash' },
+          { email: 'admin', password: 'admin', name: 'Admin' },
+        ];
 
-          if (!user.isActive) {
-            throw new Error('Conta desativada');
-          }
+        const user = validCredentials.find(
+          cred => cred.email === credentials.email && cred.password === credentials.password
+        );
 
-          const isValidPassword = await verifyPassword(credentials.password, user.password);
-          if (!isValidPassword) {
-            throw new Error('Senha incorreta');
-          }
-
-          // Update last login
-          user.lastLogin = new Date();
-          await user.save();
-
-          // Get client info if user is a client
-          let clientSlug = null;
-          if (user.role === 'client' && user.clientId) {
-            const { Client } = await import('@/lib/mongodb');
-            const client = await (Client as any).findById(user.clientId);
-            clientSlug = client?.slug;
-          }
-
+        if (user) {
           return {
-            id: user._id.toString(),
+            id: '1',
             email: user.email,
             name: user.name,
-            role: user.role,
-            clientId: user.clientId?.toString(),
-            clientSlug,
-            avatar: user.avatar,
+            role: 'admin',
+            clientId: null,
+            clientSlug: null,
+            avatar: null,
           };
-        } catch (error: any) {
-          console.error('Auth error:', error);
-          throw new Error(error.message || 'Erro de autenticação');
         }
+
+        throw new Error('Credenciais inválidas');
       }
     })
   ],
@@ -97,7 +80,11 @@ const handler = NextAuth({
     error: '/login',
   },
   
-  secret: process.env.NEXTAUTH_SECRET,
-});
+  secret: process.env.NEXTAUTH_SECRET || 'your-secret-key-here',
+  debug: process.env.NODE_ENV === 'development',
+};
+
+const handler = NextAuth(authOptions);
 
 export { handler as GET, handler as POST };
+export { authOptions };

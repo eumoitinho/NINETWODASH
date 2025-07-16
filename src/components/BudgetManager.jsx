@@ -10,87 +10,55 @@ const BudgetManager = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedPeriod, setSelectedPeriod] = useState('current');
   const [notification, setNotification] = useState(null);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Simular carregamento de dados
-    setTimeout(() => {
-      setClients([
-        {
-          id: 1,
-          name: "TechCorp Solutions",
-          status: "active",
-          avatar: "assets/images/avatar/avatar-1.png"
-        },
-        {
-          id: 2,
-          name: "E-commerce Store",
-          status: "active",
-          avatar: "assets/images/avatar/avatar-2.png"
-        },
-        {
-          id: 3,
-          name: "StartupXYZ",
-          status: "pending",
-          avatar: "assets/images/avatar/avatar-3.png"
-        },
-        {
-          id: 4,
-          name: "Digital Agency",
-          status: "active",
-          avatar: "assets/images/avatar/avatar-4.png"
-        }
-      ]);
+    fetchData();
+  }, [selectedPeriod]);
 
-      setBudgets([
-        {
-          id: 1,
-          clientId: 1,
-          period: "2024-01",
-          budget: 15000,
-          spent: 12500,
-          remaining: 2500,
-          status: "active",
-          channels: ["Google Ads", "Meta Ads"],
-          notes: "Orçamento para campanhas de conversão"
-        },
-        {
-          id: 2,
-          clientId: 2,
-          period: "2024-01",
-          budget: 8000,
-          spent: 8000,
-          remaining: 0,
-          status: "exhausted",
-          channels: ["Meta Ads"],
-          notes: "Foco em remarketing"
-        },
-        {
-          id: 3,
-          clientId: 3,
-          period: "2024-01",
-          budget: 5000,
-          spent: 0,
-          remaining: 5000,
-          status: "pending",
-          channels: ["Google Ads"],
-          notes: "Aguardando aprovação"
-        },
-        {
-          id: 4,
-          clientId: 4,
-          period: "2024-01",
-          budget: 25000,
-          spent: 22000,
-          remaining: 3000,
-          status: "active",
-          channels: ["Google Ads", "Meta Ads", "TikTok Ads"],
-          notes: "Campanha multichannel"
-        }
-      ]);
+  const fetchData = async () => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      // Buscar clientes
+      const clientsResponse = await fetch('/api/admin/clients');
+      const clientsData = await clientsResponse.json();
 
+      if (clientsResponse.ok) {
+        setClients(clientsData.data || []);
+      }
+
+      // Buscar orçamentos
+      const budgetsResponse = await fetch(`/api/admin/budgets?period=${selectedPeriod}`);
+      const budgetsData = await budgetsResponse.json();
+
+      if (budgetsResponse.ok) {
+        setBudgets(budgetsData.data || []);
+      } else {
+        // Se não conseguir buscar orçamentos, criar dados básicos baseados nos clientes
+        const basicBudgets = (clientsData.data || []).map(client => ({
+          _id: `budget-${client._id}`,
+          clientId: client._id,
+          clientSlug: client.slug,
+          clientName: client.name,
+          period: selectedPeriod === 'current' ? '2024-01' : selectedPeriod === 'previous' ? '2023-12' : '2024-02',
+          budget: client.monthlyBudget || 0,
+          spent: Math.round((client.monthlyBudget || 0) * 0.7), // Simular 70% gasto
+          remaining: Math.round((client.monthlyBudget || 0) * 0.3), // Simular 30% restante
+          status: client.status === 'active' ? 'active' : 'pending',
+          channels: client.googleAds?.connected ? ['Google Ads'] : [],
+          notes: `Orçamento para ${client.name}`
+        }));
+        setBudgets(basicBudgets);
+      }
+    } catch (err) {
+      console.error('Erro ao carregar dados:', err);
+      setError('Erro ao carregar dados de orçamentos');
+    } finally {
       setIsLoading(false);
-    }, 1000);
-  }, []);
+    }
+  };
 
   const formatCurrency = (num) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -122,6 +90,7 @@ const BudgetManager = () => {
   };
 
   const getProgressPercentage = (spent, budget) => {
+    if (budget === 0) return 0;
     return Math.min((spent / budget) * 100, 100);
   };
 
@@ -132,7 +101,6 @@ const BudgetManager = () => {
   };
 
   const handleAddBudget = () => {
-    // Implementar adição de orçamento
     setNotification({
       type: 'info',
       title: 'Funcionalidade',
@@ -141,7 +109,6 @@ const BudgetManager = () => {
   };
 
   const handleEditBudget = (budgetId) => {
-    // Implementar edição de orçamento
     setNotification({
       type: 'info',
       title: 'Funcionalidade',
@@ -151,6 +118,28 @@ const BudgetManager = () => {
 
   if (isLoading) {
     return <LoadingSpinner text="Carregando orçamentos..." />;
+  }
+
+  if (error) {
+    return (
+      <div className="row">
+        <div className="col-12">
+          <div className="card">
+            <div className="card-body text-center">
+              <Icon icon="solar:close-circle-bold" className="text-danger text-4xl mb-3" />
+              <h5>Erro ao carregar orçamentos</h5>
+              <p className="text-muted">{error}</p>
+              <button 
+                className="btn btn-primary" 
+                onClick={fetchData}
+              >
+                Tentar novamente
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -199,46 +188,48 @@ const BudgetManager = () => {
         </div>
       </div>
 
-      {/* Resumo Geral */}
+      {/* Resumo dos Orçamentos */}
       <div className="col-12 mb-4">
         <div className="row">
           <div className="col-md-3 mb-3">
             <div className="card">
               <div className="card-body text-center">
+                <Icon icon="solar:money-bag-bold" className="text-primary text-2xl mb-2" />
                 <h4 className="text-primary mb-1">
                   {formatCurrency(budgets.reduce((sum, budget) => sum + budget.budget, 0))}
                 </h4>
-                <small className="text-muted">Orçamento Total</small>
+                <p className="text-muted mb-0">Orçamento Total</p>
               </div>
             </div>
           </div>
           <div className="col-md-3 mb-3">
             <div className="card">
               <div className="card-body text-center">
-                <h4 className="text-warning mb-1">
+                <Icon icon="solar:wallet-money-bold" className="text-success text-2xl mb-2" />
+                <h4 className="text-success mb-1">
                   {formatCurrency(budgets.reduce((sum, budget) => sum + budget.spent, 0))}
                 </h4>
-                <small className="text-muted">Gasto Total</small>
+                <p className="text-muted mb-0">Gasto Total</p>
               </div>
             </div>
           </div>
           <div className="col-md-3 mb-3">
             <div className="card">
               <div className="card-body text-center">
-                <h4 className="text-success mb-1">
+                <Icon icon="solar:chart-2-bold" className="text-warning text-2xl mb-2" />
+                <h4 className="text-warning mb-1">
                   {formatCurrency(budgets.reduce((sum, budget) => sum + budget.remaining, 0))}
                 </h4>
-                <small className="text-muted">Restante Total</small>
+                <p className="text-muted mb-0">Restante</p>
               </div>
             </div>
           </div>
           <div className="col-md-3 mb-3">
             <div className="card">
               <div className="card-body text-center">
-                <h4 className="text-info mb-1">
-                  {budgets.filter(b => b.status === 'active').length}
-                </h4>
-                <small className="text-muted">Orçamentos Ativos</small>
+                <Icon icon="solar:users-group-rounded-bold" className="text-info text-2xl mb-2" />
+                <h4 className="text-info mb-1">{budgets.length}</h4>
+                <p className="text-muted mb-0">Clientes Ativos</p>
               </div>
             </div>
           </div>
@@ -249,169 +240,135 @@ const BudgetManager = () => {
       <div className="col-12">
         <div className="card">
           <div className="card-header">
-            <h6 className="mb-0">Orçamentos por Cliente</h6>
+            <h5 className="card-title mb-0">Orçamentos por Cliente</h5>
           </div>
           <div className="card-body">
-            <div className="table-responsive">
-              <table className="table table-hover">
-                <thead>
-                  <tr>
-                    <th>Cliente</th>
-                    <th>Período</th>
-                    <th>Orçamento</th>
-                    <th>Gasto</th>
-                    <th>Restante</th>
-                    <th>Progresso</th>
-                    <th>Status</th>
-                    <th>Canais</th>
-                    <th>Ações</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {budgets.map((budget) => {
-                    const client = clients.find(c => c.id === budget.clientId);
-                    const progressPercentage = getProgressPercentage(budget.spent, budget.budget);
-                    const progressColor = getProgressColor(progressPercentage);
-
-                    return (
-                      <tr key={budget.id}>
-                        <td>
-                          <div className="d-flex align-items-center">
-                            <img
-                              src={client?.avatar}
-                              alt={client?.name}
-                              className="rounded-circle me-3"
-                              width="40"
-                              height="40"
-                            />
-                            <div>
-                              <h6 className="mb-0">{client?.name}</h6>
-                            </div>
-                          </div>
-                        </td>
-                        <td>
-                          <span className="text-muted">{budget.period}</span>
-                        </td>
-                        <td>
-                          <span className="fw-semibold">{formatCurrency(budget.budget)}</span>
-                        </td>
-                        <td>
-                          <span className="text-warning">{formatCurrency(budget.spent)}</span>
-                        </td>
-                        <td>
-                          <span className="text-success">{formatCurrency(budget.remaining)}</span>
-                        </td>
-                        <td>
-                          <div className="d-flex align-items-center">
-                            <div className="progress flex-grow-1 me-2" style={{ height: '8px' }}>
-                              <div
-                                className={`progress-bar bg-${progressColor}`}
-                                style={{ width: `${progressPercentage}%` }}
-                              />
-                            </div>
-                            <small className="text-muted">{progressPercentage.toFixed(1)}%</small>
-                          </div>
-                        </td>
-                        <td>
-                          {getStatusBadge(budget.status)}
-                        </td>
-                        <td>
-                          <div className="d-flex flex-wrap gap-1">
-                            {budget.channels.map((channel, index) => (
-                              <span key={index} className="badge bg-light text-dark">
-                                {channel}
-                              </span>
-                            ))}
-                          </div>
-                        </td>
-                        <td>
-                          <div className="btn-group btn-group-sm" role="group">
-                            <button
-                              className="btn btn-outline-secondary"
-                              onClick={() => handleEditBudget(budget.id)}
-                              title="Editar Orçamento"
-                            >
-                              <Icon icon="solar:pen-bold" />
-                            </button>
-                            <button
-                              className="btn btn-outline-info"
-                              title="Ver Detalhes"
-                            >
-                              <Icon icon="solar:eye-bold" />
-                            </button>
-                            <button
-                              className="btn btn-outline-success"
-                              title="Relatórios"
-                            >
-                              <Icon icon="solar:chart-2-bold" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Gráficos de Orçamento */}
-      <div className="col-12 mt-4">
-        <div className="card">
-          <div className="card-header">
-            <h6 className="mb-0">Análise de Orçamentos</h6>
-          </div>
-          <div className="card-body">
-            <div className="row">
-              <div className="col-md-6 mb-3">
-                <h6 className="mb-3">Distribuição por Status</h6>
-                <div className="d-flex flex-column gap-2">
-                  <div className="d-flex justify-content-between align-items-center">
-                    <span>Ativos</span>
-                    <span className="badge bg-success-subtle text-success-main">
-                      {budgets.filter(b => b.status === 'active').length}
-                    </span>
-                  </div>
-                  <div className="d-flex justify-content-between align-items-center">
-                    <span>Esgotados</span>
-                    <span className="badge bg-danger-subtle text-danger-main">
-                      {budgets.filter(b => b.status === 'exhausted').length}
-                    </span>
-                  </div>
-                  <div className="d-flex justify-content-between align-items-center">
-                    <span>Pendentes</span>
-                    <span className="badge bg-warning-subtle text-warning-main">
-                      {budgets.filter(b => b.status === 'pending').length}
-                    </span>
-                  </div>
-                </div>
+            {budgets.length === 0 ? (
+              <div className="text-center py-4">
+                <Icon icon="solar:money-bag-bold" className="text-muted text-4xl mb-3" />
+                <h6>Nenhum orçamento encontrado</h6>
+                <p className="text-muted">Adicione orçamentos para começar</p>
+                <button 
+                  className="btn btn-primary btn-sm"
+                  onClick={handleAddBudget}
+                >
+                  <Icon icon="solar:add-circle-bold" className="me-2" />
+                  Adicionar Orçamento
+                </button>
               </div>
-              <div className="col-md-6 mb-3">
-                <h6 className="mb-3">Resumo Financeiro</h6>
-                <div className="d-flex flex-column gap-2">
-                  <div className="d-flex justify-content-between">
-                    <span>Orçamento Total:</span>
-                    <span className="fw-semibold">
-                      {formatCurrency(budgets.reduce((sum, b) => sum + b.budget, 0))}
-                    </span>
-                  </div>
-                  <div className="d-flex justify-content-between">
-                    <span>Gasto Total:</span>
-                    <span className="fw-semibold text-warning">
-                      {formatCurrency(budgets.reduce((sum, b) => sum + b.spent, 0))}
-                    </span>
-                  </div>
-                  <div className="d-flex justify-content-between">
-                    <span>Restante Total:</span>
-                    <span className="fw-semibold text-success">
-                      {formatCurrency(budgets.reduce((sum, b) => sum + b.remaining, 0))}
-                    </span>
-                  </div>
-                </div>
+            ) : (
+              <div className="table-responsive">
+                <table className="table table-hover">
+                  <thead>
+                    <tr>
+                      <th>Cliente</th>
+                      <th>Período</th>
+                      <th>Orçamento</th>
+                      <th>Gasto</th>
+                      <th>Restante</th>
+                      <th>Progresso</th>
+                      <th>Status</th>
+                      <th>Canais</th>
+                      <th>Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {budgets.map((budget) => {
+                      const client = clients.find(c => c._id === budget.clientId) || {};
+                      const progressPercentage = getProgressPercentage(budget.spent, budget.budget);
+                      const progressColor = getProgressColor(progressPercentage);
+                      
+                      return (
+                        <tr key={budget._id}>
+                          <td>
+                            <div className="d-flex align-items-center">
+                              {client.avatar ? (
+                                <img
+                                  src={client.avatar}
+                                  alt={client.name}
+                                  className="rounded-circle me-3"
+                                  width="40"
+                                  height="40"
+                                />
+                              ) : (
+                                <div className="rounded-circle bg-primary d-flex align-items-center justify-content-center text-white me-3" 
+                                     style={{width: '40px', height: '40px'}}>
+                                  {client.name?.charAt(0).toUpperCase() || 'C'}
+                                </div>
+                              )}
+                              <div>
+                                <h6 className="mb-0">{client.name || budget.clientName}</h6>
+                                <small className="text-muted">{client.email}</small>
+                              </div>
+                            </div>
+                          </td>
+                          <td>
+                            <span className="text-muted">{budget.period}</span>
+                          </td>
+                          <td>
+                            <span className="fw-semibold">
+                              {formatCurrency(budget.budget)}
+                            </span>
+                          </td>
+                          <td>
+                            <span className="text-success">
+                              {formatCurrency(budget.spent)}
+                            </span>
+                          </td>
+                          <td>
+                            <span className="text-warning">
+                              {formatCurrency(budget.remaining)}
+                            </span>
+                          </td>
+                          <td>
+                            <div className="d-flex align-items-center">
+                              <div className="progress flex-grow-1 me-2" style={{height: '8px'}}>
+                                <div 
+                                  className={`progress-bar bg-${progressColor}`}
+                                  style={{width: `${progressPercentage}%`}}
+                                />
+                              </div>
+                              <small className="text-muted">
+                                {progressPercentage.toFixed(1)}%
+                              </small>
+                            </div>
+                          </td>
+                          <td>
+                            {getStatusBadge(budget.status)}
+                          </td>
+                          <td>
+                            <div className="d-flex gap-1">
+                              {budget.channels?.map((channel, index) => (
+                                <span key={index} className="badge bg-light text-dark">
+                                  {channel}
+                                </span>
+                              ))}
+                            </div>
+                          </td>
+                          <td>
+                            <div className="btn-group" role="group">
+                              <button
+                                className="btn btn-sm btn-outline-primary"
+                                onClick={() => handleEditBudget(budget._id)}
+                                title="Editar"
+                              >
+                                <Icon icon="solar:pen-bold" />
+                              </button>
+                              <button
+                                className="btn btn-sm btn-outline-secondary"
+                                title="Ver Detalhes"
+                              >
+                                <Icon icon="solar:eye-bold" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </div>

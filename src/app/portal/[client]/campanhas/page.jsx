@@ -2,10 +2,14 @@
 
 import React, { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
+import { useParams } from 'next/navigation';
 import { Icon } from "@iconify/react/dist/iconify.js";
 import ClientPortalLayout from '@/components/client-portal/ClientPortalLayout';
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import ClientAccessGuard from "@/components/auth/ClientAccessGuard";
 
-const CampanhasPage = ({ params }) => {
+const CampanhasPage = () => {
+  const params = useParams();
   const { data: session } = useSession();
   const [clientData, setClientData] = useState(null);
   const [campaigns, setCampaigns] = useState([]);
@@ -22,7 +26,7 @@ const CampanhasPage = ({ params }) => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const clientSlug = await params.client;
+        const clientSlug = params.client;
 
         // Fetch client data
         const clientResponse = await fetch(`/api/clients/${clientSlug}`);
@@ -128,7 +132,9 @@ const CampanhasPage = ({ params }) => {
   }
 
   return (
-    <ClientPortalLayout clientData={clientData}>
+    <ProtectedRoute allowedRoles={['admin', 'client']}>
+      <ClientAccessGuard clientSlug={params.client}>
+        <ClientPortalLayout clientData={clientData}>
       {/* Page Header */}
       <div className="row mb-24">
         <div className="col-12">
@@ -406,7 +412,9 @@ const CampanhasPage = ({ params }) => {
           </div>
         </div>
       </div>
-    </ClientPortalLayout>
+        </ClientPortalLayout>
+      </ClientAccessGuard>
+    </ProtectedRoute>
   );
 };
 

@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { Icon } from "@iconify/react/dist/iconify.js";
 import { usePathname } from "next/navigation";
+import { signOut } from "next-auth/react";
 import ThemeToggleButton from "../helper/ThemeToggleButton";
 import Link from "next/link";
 
@@ -11,29 +12,30 @@ const MasterLayout = ({ children }) => {
   let [mobileMenu, setMobileMenu] = useState(false);
   const location = usePathname(); // Hook to get the current route
 
-  // Lista de clientes para o menu
-  const [clients] = useState([
-    { id: 1, name: "ABC EVO" },
-    { id: 2, name: "Dr. Victor Mauro" },
-    { id: 3, name: "Dr. Percio" },
-    { id: 4, name: "CWTremds" },
-    { id: 5, name: "Global Best Part" },
-    { id: 6, name: "LJ Santos" },
-    { id: 7, name: "Favretto Mídia Exterior" },
-    { id: 8, name: "Favretto Comunicação Visual" },
-    { id: 9, name: "Mundial" },
-    { id: 10, name: "Naframe" },
-    { id: 11, name: "Motin Films" },
-    { id: 12, name: "Naport" },
-    { id: 13, name: "Autoconnect Prime" },
-    { id: 14, name: "Vtelco Networks" },
-    { id: 15, name: "Amitech" },
-    { id: 16, name: "Catalisti Holding" },
-    { id: 17, name: "Hogrefe Construtora" },
-    { id: 18, name: "Colaço Engenharia" },
-    { id: 19, name: "Pesados Web" },
-    { id: 20, name: "Eleva Corpo e Alma" }
-  ]);
+  // Lista de clientes carregada do banco de dados
+  const [clients, setClients] = useState([]);
+  const [clientsLoading, setClientsLoading] = useState(true);
+
+  // Carregar clientes do banco de dados
+  useEffect(() => {
+    const fetchClients = async () => {
+      try {
+        setClientsLoading(true);
+        const response = await fetch('/api/admin/clients');
+        if (response.ok) {
+          const data = await response.json();
+          setClients(data.data || []);
+        }
+      } catch (error) {
+        console.error('Erro ao carregar clientes:', error);
+        setClients([]);
+      } finally {
+        setClientsLoading(false);
+      }
+    };
+
+    fetchClients();
+  }, []);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -206,17 +208,31 @@ const MasterLayout = ({ children }) => {
                   </Link>
                 </li>
                 <li className='sidebar-menu-group-title'>Dashboards por Cliente</li>
-                {clients.map((client) => (
-                  <li key={client.id}>
-                    <Link
-                      href={`/client-analytics/${client.id}`}
-                      className={pathname === `/client-analytics/${client.id}` ? "active-page" : ""}
-                    >
-                      <i className='ri-circle-fill circle-icon text-success-main w-auto' />{" "}
-                      {client.name}
-                    </Link>
+                {clientsLoading ? (
+                  <li>
+                    <span className="text-secondary-light">
+                      <i className="ri-loader-line animate-spin" /> Carregando clientes...
+                    </span>
                   </li>
-                ))}
+                ) : clients.length > 0 ? (
+                  clients.map((client) => (
+                    <li key={client._id}>
+                      <Link
+                        href={`/client-analytics/${client.slug}`}
+                        className={pathname === `/client-analytics/${client.slug}` ? "active-page" : ""}
+                      >
+                        <i className='ri-circle-fill circle-icon text-success-main w-auto' />{" "}
+                        {client.name}
+                      </Link>
+                    </li>
+                  ))
+                ) : (
+                  <li>
+                    <span className="text-secondary-light">
+                      <i className="ri-information-line" /> Nenhum cliente encontrado
+                    </span>
+                  </li>
+                )}
               </ul>
             </li>
 
@@ -1238,6 +1254,16 @@ const MasterLayout = ({ children }) => {
               <div className='d-flex flex-wrap align-items-center gap-3'>
                 {/* ThemeToggleButton */}
                 <ThemeToggleButton />
+                
+                {/* Logout Button */}
+                <button
+                  onClick={() => signOut({ callbackUrl: '/login?force=true' })}
+                  className='btn btn-outline-danger btn-sm'
+                  title='Logout'
+                >
+                  <Icon icon='ri:logout-circle-line' className='me-1' />
+                  Sair
+                </button>
                 <div className='dropdown d-none d-sm-inline-block'>
                   <button
                     className='has-indicator w-40-px h-40-px bg-neutral-200 rounded-circle d-flex justify-content-center align-items-center'

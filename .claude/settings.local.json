@@ -13,7 +13,15 @@
       "Bash(npm run dev:*)",
       "Bash(ls:*)",
       "Bash(pnpm build:*)",
-      "Bash(npx next:*)"
+      "Bash(npx next:*)",
+      "Bash(npx ts-node:*)",
+      "Bash(find:*)",
+      "Bash(cp:*)",
+      "Bash(curl:*)",
+      "Bash(pkill:*)",
+      "Bash(true)",
+      "Bash(pnpm dev:*)",
+      "Bash(node:*)"
     ],
     "deny": []
   }

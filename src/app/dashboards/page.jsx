@@ -1,15 +1,13 @@
+"use client";
+
 import Breadcrumb from "@/components/Breadcrumb";
 import DashboardsList from "@/components/DashboardsList";
 import MasterLayout from "@/masterLayout/MasterLayout";
-
-export const metadata = {
-  title: "Dashboards - WowDash NEXT JS",
-  description: "Visualize todos os dashboards dos clientes",
-};
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
 
 const DashboardsPage = () => {
   return (
-    <>
+    <ProtectedRoute requiredRole="admin">
       <MasterLayout>
         <Breadcrumb 
           title='Dashboards dos Clientes' 
@@ -19,7 +17,7 @@ const DashboardsPage = () => {
         />
         <DashboardsList />
       </MasterLayout>
-    </>
+    </ProtectedRoute>
   );
 };
 

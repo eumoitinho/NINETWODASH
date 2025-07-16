@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { testAllConnections } from '@/lib/client-credentials';
 import type { APIResponse } from '@/types/dashboard';
 
@@ -10,7 +10,7 @@ import type { APIResponse } from '@/types/dashboard';
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ clientId: string }> }
 ): Promise<NextResponse> {
   try {
     const session = await getServerSession(authOptions);
@@ -24,12 +24,12 @@ export async function POST(
       }, { status: 403 });
     }
 
-    const { id } = await params;
+    const { clientId } = await params;
     
-    console.log(`Testando conexões para cliente: ${id}`);
+    console.log(`Testando conexões para cliente: ${clientId}`);
     
     // Test all connections
-    const connectionResults = await testAllConnections(id);
+    const connectionResults = await testAllConnections(clientId);
     
     const allConnected = Object.values(connectionResults).every(Boolean);
     const connectedCount = Object.values(connectionResults).filter(Boolean).length;

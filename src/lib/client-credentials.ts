@@ -35,7 +35,7 @@ export interface GoogleAnalyticsCredentials {
  * Save Google Ads credentials for a client
  */
 export async function saveGoogleAdsCredentials(
-  clientId: string,
+  clientSlug: string,
   credentials: GoogleAdsCredentials
 ): Promise<boolean> {
   try {
@@ -44,9 +44,9 @@ export async function saveGoogleAdsCredentials(
     // Encrypt credentials
     const encryptedCredentials = encryptCredentials(credentials);
     
-    // Update client using type assertion
+    // Update client using slug
     await (Client as any).updateOne(
-      { _id: clientId },
+      { slug: clientSlug },
       {
         $set: {
           'googleAds.customerId': credentials.customerId,
@@ -68,7 +68,7 @@ export async function saveGoogleAdsCredentials(
  * Save Facebook Ads credentials for a client
  */
 export async function saveFacebookAdsCredentials(
-  clientId: string,
+  clientSlug: string,
   credentials: FacebookAdsCredentials
 ): Promise<boolean> {
   try {
@@ -77,9 +77,9 @@ export async function saveFacebookAdsCredentials(
     // Encrypt credentials
     const encryptedCredentials = encryptCredentials(credentials);
     
-    // Update client using type assertion
+    // Update client using slug
     await (Client as any).updateOne(
-      { _id: clientId },
+      { slug: clientSlug },
       {
         $set: {
           'facebookAds.adAccountId': credentials.adAccountId,
@@ -102,7 +102,7 @@ export async function saveFacebookAdsCredentials(
  * Save Google Analytics credentials for a client
  */
 export async function saveGoogleAnalyticsCredentials(
-  clientId: string,
+  clientSlug: string,
   credentials: GoogleAnalyticsCredentials
 ): Promise<boolean> {
   try {
@@ -111,9 +111,9 @@ export async function saveGoogleAnalyticsCredentials(
     // Encrypt credentials
     const encryptedCredentials = encryptCredentials(credentials);
     
-    // Update client using type assertion
+    // Update client using slug
     await (Client as any).updateOne(
-      { _id: clientId },
+      { slug: clientSlug },
       {
         $set: {
           'googleAnalytics.propertyId': credentials.propertyId,
@@ -135,11 +135,11 @@ export async function saveGoogleAnalyticsCredentials(
 /**
  * Get Google Ads credentials for a client
  */
-export async function getGoogleAdsCredentials(clientId: string): Promise<GoogleAdsCredentials | null> {
+export async function getGoogleAdsCredentials(clientSlug: string): Promise<GoogleAdsCredentials | null> {
   try {
     await connectToDatabase();
     
-    const client = await (Client as any).findOne({ _id: clientId });
+    const client = await (Client as any).findOne({ slug: clientSlug });
     if (!client?.googleAds?.encryptedCredentials) {
       return null;
     }
@@ -155,11 +155,11 @@ export async function getGoogleAdsCredentials(clientId: string): Promise<GoogleA
 /**
  * Get Facebook Ads credentials for a client
  */
-export async function getFacebookAdsCredentials(clientId: string): Promise<FacebookAdsCredentials | null> {
+export async function getFacebookAdsCredentials(clientSlug: string): Promise<FacebookAdsCredentials | null> {
   try {
     await connectToDatabase();
     
-    const client = await (Client as any).findOne({ _id: clientId });
+    const client = await (Client as any).findOne({ slug: clientSlug });
     if (!client?.facebookAds?.encryptedCredentials) {
       return null;
     }
@@ -175,11 +175,11 @@ export async function getFacebookAdsCredentials(clientId: string): Promise<Faceb
 /**
  * Get Google Analytics credentials for a client
  */
-export async function getGoogleAnalyticsCredentials(clientId: string): Promise<GoogleAnalyticsCredentials | null> {
+export async function getGoogleAnalyticsCredentials(clientSlug: string): Promise<GoogleAnalyticsCredentials | null> {
   try {
     await connectToDatabase();
     
-    const client = await (Client as any).findOne({ _id: clientId });
+    const client = await (Client as any).findOne({ slug: clientSlug });
     if (!client?.googleAnalytics?.encryptedCredentials) {
       return null;
     }
@@ -195,9 +195,9 @@ export async function getGoogleAnalyticsCredentials(clientId: string): Promise<G
 /**
  * Test Google Ads connection for a client
  */
-export async function testGoogleAdsConnection(clientId: string): Promise<boolean> {
+export async function testGoogleAdsConnection(clientSlug: string): Promise<boolean> {
   try {
-    const credentials = await getGoogleAdsCredentials(clientId);
+    const credentials = await getGoogleAdsCredentials(clientSlug);
     if (!credentials) {
       return false;
     }
@@ -206,9 +206,9 @@ export async function testGoogleAdsConnection(clientId: string): Promise<boolean
     // TODO: Implement actual API test when Google Ads client is available
     const isConnected = !!(credentials.customerId && credentials.developerId);
     
-    // Update connection status using type assertion
+    // Update connection status using slug
     await (Client as any).updateOne(
-      { _id: clientId },
+      { slug: clientSlug },
       {
         $set: {
           'googleAds.connected': isConnected,
@@ -227,9 +227,9 @@ export async function testGoogleAdsConnection(clientId: string): Promise<boolean
 /**
  * Test Facebook Ads connection for a client
  */
-export async function testFacebookAdsConnection(clientId: string): Promise<boolean> {
+export async function testFacebookAdsConnection(clientSlug: string): Promise<boolean> {
   try {
-    const credentials = await getFacebookAdsCredentials(clientId);
+    const credentials = await getFacebookAdsCredentials(clientSlug);
     if (!credentials) {
       return false;
     }
@@ -238,9 +238,9 @@ export async function testFacebookAdsConnection(clientId: string): Promise<boole
     // TODO: Implement actual API test when Facebook client is available
     const isConnected = !!(credentials.adAccountId && credentials.appId);
     
-    // Update connection status using type assertion
+    // Update connection status using slug
     await (Client as any).updateOne(
-      { _id: clientId },
+      { slug: clientSlug },
       {
         $set: {
           'facebookAds.connected': isConnected,
@@ -259,9 +259,9 @@ export async function testFacebookAdsConnection(clientId: string): Promise<boole
 /**
  * Test Google Analytics connection for a client
  */
-export async function testGoogleAnalyticsConnection(clientId: string): Promise<boolean> {
+export async function testGoogleAnalyticsConnection(clientSlug: string): Promise<boolean> {
   try {
-    const credentials = await getGoogleAnalyticsCredentials(clientId);
+    const credentials = await getGoogleAnalyticsCredentials(clientSlug);
     if (!credentials) {
       return false;
     }
@@ -270,9 +270,9 @@ export async function testGoogleAnalyticsConnection(clientId: string): Promise<b
     // TODO: Implement actual API test when Google Analytics client is available
     const isConnected = !!(credentials.propertyId && (credentials.serviceAccountKey || credentials.clientEmail));
     
-    // Update connection status using type assertion
+    // Update connection status using slug
     await (Client as any).updateOne(
-      { _id: clientId },
+      { slug: clientSlug },
       {
         $set: {
           'googleAnalytics.connected': isConnected,
@@ -291,15 +291,15 @@ export async function testGoogleAnalyticsConnection(clientId: string): Promise<b
 /**
  * Test all connections for a client
  */
-export async function testAllConnections(clientId: string): Promise<{
+export async function testAllConnections(clientSlug: string): Promise<{
   googleAds: boolean;
   facebookAds: boolean;
   googleAnalytics: boolean;
 }> {
   const [googleAds, facebookAds, googleAnalytics] = await Promise.allSettled([
-    testGoogleAdsConnection(clientId),
-    testFacebookAdsConnection(clientId),
-    testGoogleAnalyticsConnection(clientId),
+    testGoogleAdsConnection(clientSlug),
+    testFacebookAdsConnection(clientSlug),
+    testGoogleAnalyticsConnection(clientSlug),
   ]);
   
   return {
@@ -312,7 +312,7 @@ export async function testAllConnections(clientId: string): Promise<{
 /**
  * Remove credentials for a client (security cleanup)
  */
-export async function removeClientCredentials(clientId: string, platform?: 'googleAds' | 'facebookAds' | 'googleAnalytics'): Promise<boolean> {
+export async function removeClientCredentials(clientSlug: string, platform?: 'googleAds' | 'facebookAds' | 'googleAnalytics'): Promise<boolean> {
   try {
     await connectToDatabase();
     
@@ -335,7 +335,7 @@ export async function removeClientCredentials(clientId: string, platform?: 'goog
     
     updateData.updatedAt = new Date();
     
-    await (Client as any).updateOne({ _id: clientId }, { $set: updateData });
+    await (Client as any).updateOne({ slug: clientSlug }, { $set: updateData });
     return true;
   } catch (error) {
     console.error('Erro ao remover credenciais:', error);
@@ -346,7 +346,7 @@ export async function removeClientCredentials(clientId: string, platform?: 'goog
 /**
  * Get client API status
  */
-export async function getClientAPIStatus(clientId: string): Promise<{
+export async function getClientAPIStatus(clientSlug: string): Promise<{
   googleAds: { connected: boolean; customerId?: string; lastSync?: Date };
   facebookAds: { connected: boolean; adAccountId?: string; lastSync?: Date };
   googleAnalytics: { connected: boolean; propertyId?: string; lastSync?: Date };
@@ -354,7 +354,7 @@ export async function getClientAPIStatus(clientId: string): Promise<{
   try {
     await connectToDatabase();
     
-    const client = await (Client as any).findOne({ _id: clientId });
+    const client = await (Client as any).findOne({ slug: clientSlug });
     if (!client) {
       throw new Error('Cliente não encontrado');
     }

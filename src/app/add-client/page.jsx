@@ -1,15 +1,13 @@
+"use client";
+
 import Breadcrumb from "@/components/Breadcrumb";
 import AddEditClient from "@/components/AddEditClient";
 import MasterLayout from "@/masterLayout/MasterLayout";
-
-export const metadata = {
-  title: "Adicionar Cliente - WowDash NEXT JS",
-  description: "Adicione um novo cliente com configurações de analytics",
-};
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
 
 const AddClientPage = () => {
   return (
-    <>
+    <ProtectedRoute requiredRole="admin">
       <MasterLayout>
         <Breadcrumb 
           title='Adicionar Cliente' 
@@ -20,7 +18,7 @@ const AddClientPage = () => {
         />
         <AddEditClient />
       </MasterLayout>
-    </>
+    </ProtectedRoute>
   );
 };
 

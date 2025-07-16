@@ -1,231 +1,35 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Icon } from "@iconify/react/dist/iconify.js";
 import Link from 'next/link';
 
 const ClientList = () => {
-  const [clients, setClients] = useState([
-    {
-      id: 1,
-      name: "ABC EVO",
-      email: "contato@abcevo.com",
-      status: "active",
-      ga4Connected: true,
-      metaConnected: true,
-      lastSync: "2024-01-15",
-      monthlyBudget: 25000,
-      avatar: "assets/images/avatar/avatar-1.png"
-    },
-    {
-      id: 2,
-      name: "Dr. Victor Mauro",
-      email: "contato@drvictormauro.com",
-      status: "active",
-      ga4Connected: true,
-      metaConnected: false,
-      lastSync: "2024-01-14",
-      monthlyBudget: 18000,
-      avatar: "assets/images/avatar/avatar-2.png"
-    },
-    {
-      id: 3,
-      name: "Dr. Percio",
-      email: "contato@drpercio.com",
-      status: "active",
-      ga4Connected: false,
-      metaConnected: true,
-      lastSync: "2024-01-13",
-      monthlyBudget: 12000,
-      avatar: "assets/images/avatar/avatar-3.png"
-    },
-    {
-      id: 4,
-      name: "CWTremds",
-      email: "contato@cwtremds.com",
-      status: "active",
-      ga4Connected: true,
-      metaConnected: true,
-      lastSync: "2024-01-15",
-      monthlyBudget: 30000,
-      avatar: "assets/images/avatar/avatar-4.png"
-    },
-    {
-      id: 5,
-      name: "Global Best Part",
-      email: "contato@globalbestpart.com",
-      status: "active",
-      ga4Connected: true,
-      metaConnected: true,
-      lastSync: "2024-01-14",
-      monthlyBudget: 22000,
-      avatar: "assets/images/avatar/avatar-1.png"
-    },
-    {
-      id: 6,
-      name: "LJ Santos",
-      email: "contato@ljsantos.com",
-      status: "active",
-      ga4Connected: false,
-      metaConnected: true,
-      lastSync: "2024-01-12",
-      monthlyBudget: 15000,
-      avatar: "assets/images/avatar/avatar-2.png"
-    },
-    {
-      id: 7,
-      name: "Favretto Mídia Exterior",
-      email: "contato@favrettomidia.com",
-      status: "active",
-      ga4Connected: true,
-      metaConnected: true,
-      lastSync: "2024-01-15",
-      monthlyBudget: 35000,
-      avatar: "assets/images/avatar/avatar-3.png"
-    },
-    {
-      id: 8,
-      name: "Favretto Comunicação Visual",
-      email: "contato@favrettocomunicacao.com",
-      status: "active",
-      ga4Connected: true,
-      metaConnected: false,
-      lastSync: "2024-01-14",
-      monthlyBudget: 28000,
-      avatar: "assets/images/avatar/avatar-4.png"
-    },
-    {
-      id: 9,
-      name: "Mundial",
-      email: "contato@mundial.com",
-      status: "active",
-      ga4Connected: true,
-      metaConnected: true,
-      lastSync: "2024-01-15",
-      monthlyBudget: 40000,
-      avatar: "assets/images/avatar/avatar-1.png"
-    },
-    {
-      id: 10,
-      name: "Naframe",
-      email: "contato@naframe.com",
-      status: "active",
-      ga4Connected: false,
-      metaConnected: true,
-      lastSync: "2024-01-13",
-      monthlyBudget: 16000,
-      avatar: "assets/images/avatar/avatar-2.png"
-    },
-    {
-      id: 11,
-      name: "Motin Films",
-      email: "contato@motinfilms.com",
-      status: "active",
-      ga4Connected: true,
-      metaConnected: true,
-      lastSync: "2024-01-15",
-      monthlyBudget: 32000,
-      avatar: "assets/images/avatar/avatar-3.png"
-    },
-    {
-      id: 12,
-      name: "Naport",
-      email: "contato@naport.com",
-      status: "active",
-      ga4Connected: true,
-      metaConnected: false,
-      lastSync: "2024-01-14",
-      monthlyBudget: 19000,
-      avatar: "assets/images/avatar/avatar-4.png"
-    },
-    {
-      id: 13,
-      name: "Autoconnect Prime",
-      email: "contato@autoconnectprime.com",
-      status: "active",
-      ga4Connected: true,
-      metaConnected: true,
-      lastSync: "2024-01-15",
-      monthlyBudget: 45000,
-      avatar: "assets/images/avatar/avatar-1.png"
-    },
-    {
-      id: 14,
-      name: "Vtelco Networks",
-      email: "contato@vtelconetworks.com",
-      status: "active",
-      ga4Connected: true,
-      metaConnected: true,
-      lastSync: "2024-01-15",
-      monthlyBudget: 38000,
-      avatar: "assets/images/avatar/avatar-2.png"
-    },
-    {
-      id: 15,
-      name: "Amitech",
-      email: "contato@amitech.com",
-      status: "active",
-      ga4Connected: false,
-      metaConnected: true,
-      lastSync: "2024-01-12",
-      monthlyBudget: 14000,
-      avatar: "assets/images/avatar/avatar-3.png"
-    },
-    {
-      id: 16,
-      name: "Catalisti Holding",
-      email: "contato@catalistiholding.com",
-      status: "active",
-      ga4Connected: true,
-      metaConnected: true,
-      lastSync: "2024-01-15",
-      monthlyBudget: 50000,
-      avatar: "assets/images/avatar/avatar-4.png"
-    },
-    {
-      id: 17,
-      name: "Hogrefe Construtora",
-      email: "contato@hogrefeconstrutora.com",
-      status: "active",
-      ga4Connected: true,
-      metaConnected: false,
-      lastSync: "2024-01-14",
-      monthlyBudget: 26000,
-      avatar: "assets/images/avatar/avatar-1.png"
-    },
-    {
-      id: 18,
-      name: "Colaço Engenharia",
-      email: "contato@colacoengenharia.com",
-      status: "active",
-      ga4Connected: true,
-      metaConnected: true,
-      lastSync: "2024-01-15",
-      monthlyBudget: 42000,
-      avatar: "assets/images/avatar/avatar-2.png"
-    },
-    {
-      id: 19,
-      name: "Pesados Web",
-      email: "contato@pesadosweb.com",
-      status: "active",
-      ga4Connected: false,
-      metaConnected: true,
-      lastSync: "2024-01-13",
-      monthlyBudget: 11000,
-      avatar: "assets/images/avatar/avatar-3.png"
-    },
-    {
-      id: 20,
-      name: "Eleva Corpo e Alma",
-      email: "contato@elevacorpoealma.com",
-      status: "active",
-      ga4Connected: true,
-      metaConnected: true,
-      lastSync: "2024-01-15",
-      monthlyBudget: 24000,
-      avatar: "assets/images/avatar/avatar-4.png"
+  const [clients, setClients] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    fetchClients();
+  }, []);
+
+  const fetchClients = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('/api/admin/clients');
+      
+      if (!response.ok) {
+        throw new Error('Erro ao carregar clientes');
+      }
+      
+      const data = await response.json();
+      setClients(data.data || []);
+    } catch (err) {
+      console.error('Erro ao buscar clientes:', err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
     }
-  ]);
+  };
 
   const getStatusBadge = (status) => {
     const statusClasses = {
@@ -248,12 +52,67 @@ const ClientList = () => {
     );
   };
 
+  const formatDate = (dateString) => {
+    if (!dateString) return 'Não sincronizado';
+    
+    const date = new Date(dateString);
+    return date.toLocaleDateString('pt-BR');
+  };
+
+  const formatCurrency = (value) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    }).format(value);
+  };
+
+  if (loading) {
+    return (
+      <div className="row">
+        <div className="col-12">
+          <div className="card">
+            <div className="card-body text-center">
+              <div className="spinner-border text-primary" role="status">
+                <span className="visually-hidden">Carregando...</span>
+              </div>
+              <p className="mt-3">Carregando clientes...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="row">
+        <div className="col-12">
+          <div className="card">
+            <div className="card-body text-center">
+              <Icon icon="solar:close-circle-bold" className="text-danger text-4xl mb-3" />
+              <h5>Erro ao carregar clientes</h5>
+              <p className="text-muted">{error}</p>
+              <button 
+                className="btn btn-primary" 
+                onClick={fetchClients}
+              >
+                Tentar novamente
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="row">
       <div className="col-12">
         <div className="card">
           <div className="card-header d-flex justify-content-between align-items-center">
-            <h5 className="card-title mb-0">Gestão de Clientes</h5>
+            <h5 className="card-title mb-0">
+              Gestão de Clientes ({clients.length})
+            </h5>
             <div className="d-flex gap-2">
               <Link href="/client-tags" className="btn btn-outline-warning">
                 <Icon icon="solar:tag-price-bold" className="me-2" />
@@ -270,81 +129,110 @@ const ClientList = () => {
             </div>
           </div>
           <div className="card-body">
-            <div className="table-responsive">
-              <table className="table table-hover">
-                <thead>
-                  <tr>
-                    <th>Cliente</th>
-                    <th>Status</th>
-                    <th>Google Analytics 4</th>
-                    <th>Meta Ads</th>
-                    <th>Última Sincronização</th>
-                    <th>Orçamento Mensal</th>
-                    <th>Ações</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {clients.map((client) => (
-                    <tr key={client.id}>
-                      <td>
-                        <div className="d-flex align-items-center">
-                          <img
-                            src={client.avatar}
-                            alt={client.name}
-                            className="rounded-circle me-3"
-                            width="40"
-                            height="40"
-                          />
-                          <div>
-                            <h6 className="mb-0">{client.name}</h6>
-                            <small className="text-muted">{client.email}</small>
-                          </div>
-                        </div>
-                      </td>
-                      <td>{getStatusBadge(client.status)}</td>
-                      <td>{getConnectionStatus(client.ga4Connected)}</td>
-                      <td>{getConnectionStatus(client.metaConnected)}</td>
-                      <td>
-                        {client.lastSync ? (
-                          <span className="text-muted">{client.lastSync}</span>
-                        ) : (
-                          <span className="text-warning">Não sincronizado</span>
-                        )}
-                      </td>
-                      <td>
-                        <span className="fw-semibold">
-                          R$ {client.monthlyBudget.toLocaleString()}
-                        </span>
-                      </td>
-                      <td>
-                        <div className="btn-group" role="group">
-                          <Link
-                            href={`/client-analytics/${client.id}`}
-                            className="btn btn-sm btn-outline-primary"
-                            title="Ver Analytics"
-                          >
-                            <Icon icon="solar:chart-2-bold" />
-                          </Link>
-                          <Link
-                            href={`/edit-client/${client.id}`}
-                            className="btn btn-sm btn-outline-secondary"
-                            title="Editar"
-                          >
-                            <Icon icon="solar:pen-bold" />
-                          </Link>
-                          <button
-                            className="btn btn-sm btn-outline-danger"
-                            title="Remover"
-                          >
-                            <Icon icon="solar:trash-bin-trash-bold" />
-                          </button>
-                        </div>
-                      </td>
+            {clients.length === 0 ? (
+              <div className="text-center py-5">
+                <Icon icon="solar:users-group-rounded-bold" className="text-muted text-4xl mb-3" />
+                <h5>Nenhum cliente encontrado</h5>
+                <p className="text-muted">Adicione seu primeiro cliente para começar</p>
+                <Link href="/add-client" className="btn btn-primary">
+                  <Icon icon="solar:add-circle-bold" className="me-2" />
+                  Adicionar Cliente
+                </Link>
+              </div>
+            ) : (
+              <div className="table-responsive">
+                <table className="table table-hover">
+                  <thead>
+                    <tr>
+                      <th>Cliente</th>
+                      <th>Status</th>
+                      <th>Google Analytics 4</th>
+                      <th>Meta Ads</th>
+                      <th>Última Sincronização</th>
+                      <th>Orçamento Mensal</th>
+                      <th>Ações</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {clients.map((client) => (
+                      <tr key={client._id}>
+                        <td>
+                          <div className="d-flex align-items-center">
+                            <div className="avatar me-3">
+                              {client.avatar ? (
+                                <img
+                                  src={client.avatar}
+                                  alt={client.name}
+                                  className="rounded-circle"
+                                  width="40"
+                                  height="40"
+                                />
+                              ) : (
+                                <div className="rounded-circle bg-primary d-flex align-items-center justify-content-center text-white" 
+                                     style={{width: '40px', height: '40px'}}>
+                                  {client.name.charAt(0).toUpperCase()}
+                                </div>
+                              )}
+                            </div>
+                            <div>
+                              <h6 className="mb-0">{client.name}</h6>
+                              <small className="text-muted">{client.email}</small>
+                            </div>
+                          </div>
+                        </td>
+                        <td>{getStatusBadge(client.status)}</td>
+                        <td>{getConnectionStatus(client.googleAnalytics?.connected)}</td>
+                        <td>{getConnectionStatus(client.facebookAds?.connected)}</td>
+                        <td>
+                          {client.googleAnalytics?.lastSync || client.facebookAds?.lastSync ? (
+                            <span className="text-muted">
+                              {formatDate(client.googleAnalytics?.lastSync || client.facebookAds?.lastSync)}
+                            </span>
+                          ) : (
+                            <span className="text-warning">Não sincronizado</span>
+                          )}
+                        </td>
+                        <td>
+                          <span className="fw-semibold">
+                            {formatCurrency(client.monthlyBudget)}
+                          </span>
+                        </td>
+                        <td>
+                          <div className="btn-group" role="group">
+                            <Link
+                              href={`/client-analytics/${client.slug}`}
+                              className="btn btn-sm btn-outline-primary"
+                              title="Ver Analytics"
+                            >
+                              <Icon icon="solar:chart-2-bold" />
+                            </Link>
+                            <Link
+                              href={`/edit-client/${client.slug}`}
+                              className="btn btn-sm btn-outline-secondary"
+                              title="Editar"
+                            >
+                              <Icon icon="solar:pen-bold" />
+                            </Link>
+                            <button
+                              className="btn btn-sm btn-outline-danger"
+                              title="Remover"
+                              onClick={() => {
+                                if (confirm(`Tem certeza que deseja remover ${client.name}?`)) {
+                                  // TODO: Implementar remoção
+                                  console.log('Remover cliente:', client._id);
+                                }
+                              }}
+                            >
+                              <Icon icon="solar:trash-bin-trash-bold" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         </div>
       </div>

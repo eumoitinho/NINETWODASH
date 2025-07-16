@@ -2,10 +2,14 @@
 
 import React, { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
+import { useParams } from 'next/navigation';
 import { Icon } from "@iconify/react/dist/iconify.js";
 import ClientPortalLayout from '@/components/client-portal/ClientPortalLayout';
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import ClientAccessGuard from "@/components/auth/ClientAccessGuard";
 
-const AnalyticsPage = ({ params }) => {
+const AnalyticsPage = () => {
+  const params = useParams();
   const { data: session } = useSession();
   const [clientData, setClientData] = useState(null);
   const [analyticsData, setAnalyticsData] = useState(null);
@@ -18,7 +22,7 @@ const AnalyticsPage = ({ params }) => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const clientSlug = await params.client;
+        const clientSlug = params.client;
 
         // Fetch client data
         const clientResponse = await fetch(`/api/clients/${clientSlug}`);
@@ -92,19 +96,21 @@ const AnalyticsPage = ({ params }) => {
   }
 
   return (
-    <ClientPortalLayout clientData={clientData}>
-      {/* Page Header */}
-      <div className="row mb-24">
-        <div className="col-12">
-          <div className="card">
-            <div className="card-body">
-              <div className="d-flex align-items-center justify-content-between mb-20">
-                <div>
-                  <h4 className="card-title mb-8">Google Analytics</h4>
-                  <p className="text-secondary-light mb-0">
-                    Acompanhe o comportamento dos visitantes em seu site
-                  </p>
-                </div>
+    <ProtectedRoute allowedRoles={['admin', 'client']}>
+      <ClientAccessGuard clientSlug={params.client}>
+        <ClientPortalLayout clientData={clientData}>
+          {/* Page Header */}
+          <div className="row mb-24">
+            <div className="col-12">
+              <div className="card">
+                <div className="card-body">
+                  <div className="d-flex align-items-center justify-content-between mb-20">
+                    <div>
+                      <h4 className="card-title mb-8">Google Analytics</h4>
+                      <p className="text-secondary-light mb-0">
+                        Acompanhe o comportamento dos visitantes em seu site
+                      </p>
+                    </div>
                 <div className="d-flex align-items-center gap-12">
                   <div className="btn-group" role="group">
                     <button
@@ -398,7 +404,9 @@ const AnalyticsPage = ({ params }) => {
           </div>
         </div>
       </div>
-    </ClientPortalLayout>
+        </ClientPortalLayout>
+      </ClientAccessGuard>
+    </ProtectedRoute>
   );
 };
 

@@ -285,6 +285,53 @@ export class GoogleAdsClient {
       default: return 'paused';
     }
   }
+
+  /**
+   * Generate realistic mock metrics for development
+   */
+  private generateMockMetrics(customerId: string, dateFrom: string, dateTo: string): CampaignMetrics {
+    // Base metrics with some variation based on client ID
+    const clientHash = this.hashClientId(customerId);
+    const dayCount = Math.max(1, Math.floor((new Date(dateTo).getTime() - new Date(dateFrom).getTime()) / (1000 * 60 * 60 * 24)));
+    
+    // Generate realistic metrics based on client and period
+    const baseImpressions = Math.floor(clientHash * 100 + dayCount * 50);
+    const impressions = baseImpressions + Math.floor(Math.random() * baseImpressions * 0.3);
+    const clicks = Math.floor(impressions * (0.008 + Math.random() * 0.012)); // CTR entre 0.8% e 2%
+    const cost = clicks * (12 + Math.random() * 25); // CPC entre R$ 12 e R$ 37
+    const conversions = Math.floor(clicks * (0.08 + Math.random() * 0.15)); // Taxa de conversão 8-23%
+    
+    const ctr = impressions > 0 ? (clicks / impressions) * 100 : 0;
+    const cpc = clicks > 0 ? cost / clicks : 0;
+    const cpm = impressions > 0 ? (cost / impressions) * 1000 : 0;
+    const conversionRate = clicks > 0 ? (conversions / clicks) * 100 : 0;
+    const roas = cost > 0 ? (conversions * 150) / cost : 0; // Assumindo valor médio de conversão R$ 150
+
+    return {
+      impressions,
+      clicks,
+      cost: parseFloat(cost.toFixed(2)),
+      conversions,
+      ctr: parseFloat(ctr.toFixed(2)),
+      cpc: parseFloat(cpc.toFixed(2)),
+      cpm: parseFloat(cpm.toFixed(2)),
+      conversionRate: parseFloat(conversionRate.toFixed(2)),
+      roas: parseFloat(roas.toFixed(2)),
+    };
+  }
+
+  /**
+   * Create a hash from client ID for consistent mock data
+   */
+  private hashClientId(customerId: string): number {
+    let hash = 0;
+    for (let i = 0; i < customerId.length; i++) {
+      const char = customerId.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32-bit integer
+    }
+    return Math.abs(hash) % 1000 + 500; // Retorna um número entre 500 e 1499
+  }
 }
 
 /**

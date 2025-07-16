@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import {
   saveGoogleAdsCredentials,
   saveFacebookAdsCredentials,
@@ -17,7 +17,7 @@ import type { APIResponse } from '@/types/dashboard';
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ clientId: string }> }
 ): Promise<NextResponse> {
   try {
     const session = await getServerSession(authOptions);
@@ -31,8 +31,8 @@ export async function GET(
       }, { status: 403 });
     }
 
-    const { id } = await params;
-    const apiStatus = await getClientAPIStatus(id);
+    const { clientId } = await params;
+    const apiStatus = await getClientAPIStatus(clientId);
 
     return NextResponse.json<APIResponse<any>>({
       success: true,
@@ -58,7 +58,7 @@ export async function GET(
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ clientId: string }> }
 ): Promise<NextResponse> {
   try {
     const session = await getServerSession(authOptions);
@@ -72,7 +72,7 @@ export async function POST(
       }, { status: 403 });
     }
 
-    const { id } = await params;
+    const { clientId } = await params;
     const body = await request.json();
     const { platform, credentials } = body;
 
@@ -89,13 +89,13 @@ export async function POST(
 
     switch (platform) {
       case 'googleAds':
-        success = await saveGoogleAdsCredentials(id, credentials);
+        success = await saveGoogleAdsCredentials(clientId, credentials);
         break;
       case 'facebookAds':
-        success = await saveFacebookAdsCredentials(id, credentials);
+        success = await saveFacebookAdsCredentials(clientId, credentials);
         break;
       case 'googleAnalytics':
-        success = await saveGoogleAnalyticsCredentials(id, credentials);
+        success = await saveGoogleAnalyticsCredentials(clientId, credentials);
         break;
       default:
         return NextResponse.json<APIResponse<null>>({
@@ -140,7 +140,7 @@ export async function POST(
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ clientId: string }> }
 ): Promise<NextResponse> {
   try {
     const session = await getServerSession(authOptions);
@@ -154,11 +154,11 @@ export async function DELETE(
       }, { status: 403 });
     }
 
-    const { id } = await params;
+    const { clientId } = await params;
     const { searchParams } = new URL(request.url);
     const platform = searchParams.get('platform') as 'googleAds' | 'facebookAds' | 'googleAnalytics' | undefined;
 
-    const success = await removeClientCredentials(id, platform);
+    const success = await removeClientCredentials(clientId, platform);
 
     if (!success) {
       return NextResponse.json<APIResponse<null>>({

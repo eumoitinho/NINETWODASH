@@ -343,6 +343,55 @@ export async function validateFacebookToken(accessToken: string): Promise<boolea
     console.error('Error validating Facebook token:', error);
     return false;
   }
+
+  /**
+   * Generate realistic mock metrics for development
+   */
+  private generateMockMetrics(adAccountId: string, dateFrom: string, dateTo: string): CampaignMetrics {
+    // Base metrics with some variation based on ad account ID
+    const accountHash = this.hashAccountId(adAccountId);
+    const dayCount = Math.max(1, Math.floor((new Date(dateTo).getTime() - new Date(dateFrom).getTime()) / (1000 * 60 * 60 * 24)));
+    
+    // Generate realistic Facebook metrics (geralmente maiores que Google Ads)
+    const baseImpressions = Math.floor(accountHash * 200 + dayCount * 100);
+    const impressions = baseImpressions + Math.floor(Math.random() * baseImpressions * 0.4);
+    const clicks = Math.floor(impressions * (0.012 + Math.random() * 0.018)); // CTR entre 1.2% e 3%
+    const cost = clicks * (8 + Math.random() * 20); // CPC entre R$ 8 e R$ 28 (mais barato que Google)
+    const conversions = Math.floor(clicks * (0.06 + Math.random() * 0.12)); // Taxa de conversão 6-18%
+    
+    const ctr = impressions > 0 ? (clicks / impressions) * 100 : 0;
+    const cpc = clicks > 0 ? cost / clicks : 0;
+    const cpm = impressions > 0 ? (cost / impressions) * 1000 : 0;
+    const conversionRate = clicks > 0 ? (conversions / clicks) * 100 : 0;
+    const roas = cost > 0 ? (conversions * 140) / cost : 0; // Assumindo valor médio de conversão R$ 140
+
+    return {
+      impressions,
+      clicks,
+      cost: parseFloat(cost.toFixed(2)),
+      conversions,
+      ctr: parseFloat(ctr.toFixed(2)),
+      cpc: parseFloat(cpc.toFixed(2)),
+      cpm: parseFloat(cpm.toFixed(2)),
+      conversionRate: parseFloat(conversionRate.toFixed(2)),
+      roas: parseFloat(roas.toFixed(2)),
+    };
+  }
+
+  /**
+   * Create a hash from ad account ID for consistent mock data
+   */
+  private hashAccountId(adAccountId: string): number {
+    // Remove 'act_' prefix if present
+    const cleanId = adAccountId.replace('act_', '');
+    let hash = 0;
+    for (let i = 0; i < cleanId.length; i++) {
+      const char = cleanId.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32-bit integer
+    }
+    return Math.abs(hash) % 800 + 400; // Retorna um número entre 400 e 1199
+  }
 }
 
 /**

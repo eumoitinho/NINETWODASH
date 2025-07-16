@@ -488,7 +488,7 @@ const ActivityLogSchema = new mongoose.Schema({
 });
 
 // Create indexes for better performance
-ClientSchema.index({ slug: 1 });
+// Note: slug index is already created by unique: true in schema definition
 CampaignSchema.index({ clientId: 1, platform: 1, 'metrics.date': 1 });
 ReportSchema.index({ clientId: 1, type: 1, createdAt: -1 });
 AnalyticsDataSchema.index({ clientId: 1, date: 1 });

@@ -2,6 +2,28 @@ import { NextRequest, NextResponse } from 'next/server';
 import { LRUCache } from 'lru-cache';
 import { getToken } from 'next-auth/jwt';
 
+// Protected routes that require authentication
+const PROTECTED_ROUTES = [
+  '/dashboards',
+  '/clients',
+  '/client-analytics',
+  '/add-client',
+  '/edit-client',
+  '/budgets',
+  '/client-tags',
+];
+
+// Admin-only routes
+const ADMIN_ONLY_ROUTES = [
+  '/dashboards',
+  '/clients',
+  '/add-client',
+  '/edit-client',
+  '/budgets',
+  '/client-tags',
+  '/api/admin',
+];
+
 // Rate limiting configuration
 interface RateLimitConfig {
   max: number;
@@ -203,41 +225,24 @@ async function handleAuthentication(request: NextRequest): Promise<NextResponse>
       // Admins can access any client portal
     }
     
-    // Redirect authenticated users away from login page
+    // Redirect authenticated users away from login page (unless forcing logout)
     if (pathname === '/login' || pathname === '/sign-in') {
-      if (userRole === 'admin') {
-        return NextResponse.redirect(new URL('/dashboards', request.url));
-      } else {
-        const clientSlug = token.clientSlug as string;
-        return NextResponse.redirect(new URL(`/portal/${clientSlug}`, request.url));
+      const { searchParams } = new URL(request.url);
+      const forceLogin = searchParams.get('force') === 'true';
+      
+      if (!forceLogin) {
+        if (userRole === 'admin') {
+          return NextResponse.redirect(new URL('/dashboards', request.url));
+        } else {
+          const clientSlug = token.clientSlug as string;
+          return NextResponse.redirect(new URL(`/portal/${clientSlug}`, request.url));
+        }
       }
     }
   }
 
   return NextResponse.next();
 }
-
-// Protected routes that require authentication
-const PROTECTED_ROUTES = [
-  '/dashboards',
-  '/clients',
-  '/client-analytics',
-  '/add-client',
-  '/edit-client',
-  '/budgets',
-  '/client-tags',
-];
-
-// Admin-only routes
-const ADMIN_ONLY_ROUTES = [
-  '/dashboards',
-  '/clients',
-  '/add-client',
-  '/edit-client',
-  '/budgets',
-  '/client-tags',
-  '/api/admin',
-];
 
 /**
  * Main middleware function

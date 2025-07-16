@@ -1,11 +1,16 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import { useParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { Icon } from "@iconify/react/dist/iconify.js";
 import ClientPortalLayout from '@/components/client-portal/ClientPortalLayout';
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import ClientAccessGuard from "@/components/auth/ClientAccessGuard";
 
-const RelatoriosPage = ({ params }) => {
+const RelatoriosPage = () => {
+  const params = useParams();
+  const clientSlug = params?.client;
   const { data: session } = useSession();
   const [clientData, setClientData] = useState(null);
   const [reports, setReports] = useState([]);
@@ -19,7 +24,6 @@ const RelatoriosPage = ({ params }) => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const clientSlug = await params.client;
 
         // Fetch client data
         const clientResponse = await fetch(`/api/clients/${clientSlug}`);
@@ -46,13 +50,12 @@ const RelatoriosPage = ({ params }) => {
     };
 
     fetchData();
-  }, [params.client]);
+  }, [clientSlug]);
 
 
   const generateReport = async (reportType, period) => {
     try {
       setLoading(true);
-      const clientSlug = await params.client;
       
       const response = await fetch(`/api/reports/${clientSlug}/generate`, {
         method: 'POST',
@@ -77,7 +80,6 @@ const RelatoriosPage = ({ params }) => {
   const viewReport = async (report) => {
     try {
       setLoading(true);
-      const clientSlug = await params.client;
       
       const response = await fetch(`/api/reports/${clientSlug}/${report.id}`);
       if (response.ok) {
@@ -191,7 +193,9 @@ const RelatoriosPage = ({ params }) => {
 
   if (loading && !selectedReport) {
     return (
-      <ClientPortalLayout clientData={clientData}>
+      <ProtectedRoute allowedRoles={['admin', 'client']}>
+        <ClientAccessGuard clientSlug={clientSlug}>
+          <ClientPortalLayout clientData={clientData}>
         <div className="d-flex justify-content-center align-items-center" style={{ height: '400px' }}>
           <div className="text-center">
             <div className="spinner-border text-primary mb-3" role="status">
@@ -200,25 +204,33 @@ const RelatoriosPage = ({ params }) => {
             <p>Carregando relatórios...</p>
           </div>
         </div>
-      </ClientPortalLayout>
+          </ClientPortalLayout>
+        </ClientAccessGuard>
+      </ProtectedRoute>
     );
   }
 
   if (error) {
     return (
-      <ClientPortalLayout clientData={clientData}>
+      <ProtectedRoute allowedRoles={['admin', 'client']}>
+        <ClientAccessGuard clientSlug={clientSlug}>
+          <ClientPortalLayout clientData={clientData}>
         <div className="alert alert-danger">
           <Icon icon="solar:danger-circle-bold" className="me-2" />
           Erro ao carregar relatórios: {error}
         </div>
-      </ClientPortalLayout>
+          </ClientPortalLayout>
+        </ClientAccessGuard>
+      </ProtectedRoute>
     );
   }
 
   // Report detail view
   if (selectedReport && reportData) {
     return (
-      <ClientPortalLayout clientData={clientData}>
+      <ProtectedRoute allowedRoles={['admin', 'client']}>
+        <ClientAccessGuard clientSlug={clientSlug}>
+          <ClientPortalLayout clientData={clientData}>
         {/* Report Header */}
         <div className="row mb-24">
           <div className="col-12">
@@ -369,13 +381,17 @@ const RelatoriosPage = ({ params }) => {
             </div>
           </div>
         ))}
-      </ClientPortalLayout>
+          </ClientPortalLayout>
+        </ClientAccessGuard>
+      </ProtectedRoute>
     );
   }
 
   // Reports list view
   return (
-    <ClientPortalLayout clientData={clientData}>
+    <ProtectedRoute allowedRoles={['admin', 'client']}>
+      <ClientAccessGuard clientSlug={clientSlug}>
+        <ClientPortalLayout clientData={clientData}>
       {/* Page Header */}
       <div className="row mb-24">
         <div className="col-12">
@@ -632,7 +648,9 @@ const RelatoriosPage = ({ params }) => {
           </div>
         </div>
       </div>
-    </ClientPortalLayout>
+        </ClientPortalLayout>
+      </ClientAccessGuard>
+    </ProtectedRoute>
   );
 };
 

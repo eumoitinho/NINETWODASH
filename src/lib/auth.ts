@@ -56,17 +56,18 @@ export function generateRandomPassword(length: number = 12): string {
 }
 
 /**
- * Hash password
+ * Hash password using bcryptjs
  */
 export async function hashPassword(password: string): Promise<string> {
-  // Temporariamente retornando a senha sem hash para permitir o build
-  return password;
+  const bcrypt = require('bcryptjs');
+  const saltRounds = 12;
+  return await bcrypt.hash(password, saltRounds);
 }
 
 /**
- * Verify password
+ * Verify password using bcryptjs
  */
 export async function verifyPassword(password: string, hashedPassword: string): Promise<boolean> {
-  // Temporariamente comparando senhas simples para permitir o build
-  return password === hashedPassword;
+  const bcrypt = require('bcryptjs');
+  return await bcrypt.compare(password, hashedPassword);
 }

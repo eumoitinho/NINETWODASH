@@ -1,13 +1,18 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import { useParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { Icon } from "@iconify/react/dist/iconify.js";
 import ClientPortalLayout from '@/components/client-portal/ClientPortalLayout';
 import ChartBuilder from '@/components/charts/ChartBuilder';
 import CustomChart from '@/components/charts/CustomChart';
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import ClientAccessGuard from "@/components/auth/ClientAccessGuard";
 
-const ChartsPage = ({ params }) => {
+const ChartsPage = () => {
+  const params = useParams();
+  const clientSlug = params?.client;
   const { data: session } = useSession();
   const [clientData, setClientData] = useState(null);
   const [customCharts, setCustomCharts] = useState([]);
@@ -22,18 +27,17 @@ const ChartsPage = ({ params }) => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const resolvedClientSlug = await params.client;
-        setClientSlug(resolvedClientSlug);
+        setClientSlug(clientSlug);
 
         // Fetch client data
-        const clientResponse = await fetch(`/api/clients/${resolvedClientSlug}`);
+        const clientResponse = await fetch(`/api/clients/${clientSlug}`);
         if (clientResponse.ok) {
           const clientResult = await clientResponse.json();
           setClientData(clientResult.data);
         }
 
         // Fetch custom charts
-        const chartsResponse = await fetch(`/api/charts/${resolvedClientSlug}`);
+        const chartsResponse = await fetch(`/api/charts/${clientSlug}`);
         if (chartsResponse.ok) {
           const chartsResult = await chartsResponse.json();
           setCustomCharts(chartsResult.data || []);
@@ -50,7 +54,7 @@ const ChartsPage = ({ params }) => {
     };
 
     fetchData();
-  }, [params.client]);
+  }, [clientSlug]);
 
   const getDefaultCharts = () => {
     return [
@@ -247,7 +251,9 @@ const ChartsPage = ({ params }) => {
   }
 
   return (
-    <ClientPortalLayout clientData={clientData}>
+    <ProtectedRoute allowedRoles={['admin', 'client']}>
+      <ClientAccessGuard clientSlug={clientSlug}>
+        <ClientPortalLayout clientData={clientData}>
       {/* Page Header */}
       <div className="row mb-24">
         <div className="col-12">
@@ -475,7 +481,9 @@ const ChartsPage = ({ params }) => {
           </div>
         </div>
       </div>
-    </ClientPortalLayout>
+        </ClientPortalLayout>
+      </ClientAccessGuard>
+    </ProtectedRoute>
   );
 };
 

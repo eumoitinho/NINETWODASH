@@ -28,7 +28,6 @@
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
-    "@types/bcryptjs": "^3.0.0",
     "animate.css": "^4.1.1",
     "apexcharts": "^4.1.0",
     "bcryptjs": "^3.0.2",
@@ -37,6 +36,7 @@
     "datatables.net-dt": "^2.1.8",
     "date-fns": "^4.1.0",
     "flatpickr": "^4.6.13",
+    "google-ads-api": "^20.0.1",
     "highlight.js": "^11.10.0",
     "isotope-layout": "^3.0.6",
     "jose": "^6.0.12",
@@ -73,6 +73,7 @@
   },
   "devDependencies": {
     "@iconify/react": "^5.0.2",
+    "@types/bcryptjs": "^3.0.0",
     "@types/node": "^24.0.14",
     "@types/react": "^19.1.8",
     "typescript": "^5.8.3",

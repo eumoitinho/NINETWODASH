@@ -1,15 +1,15 @@
+"use client";
+
 import Breadcrumb from "@/components/Breadcrumb";
 import AddEditClient from "@/components/AddEditClient";
 import MasterLayout from "@/masterLayout/MasterLayout";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
 
-export const metadata = {
-  title: "Editar Cliente - WowDash NEXT JS",
-  description: "Edite as configurações do cliente",
-};
-
-const EditClientPage = ({ params }) => {
+const EditClientPage = async ({ params }) => {
+  const resolvedParams = await params;
+  
   return (
-    <>
+    <ProtectedRoute requiredRole="admin">
       <MasterLayout>
         <Breadcrumb 
           title='Editar Cliente' 
@@ -18,9 +18,9 @@ const EditClientPage = ({ params }) => {
             { label: 'Editar Cliente' }
           ]}
         />
-        <AddEditClient clientId={params.id} />
+        <AddEditClient clientSlug={resolvedParams.slug} />
       </MasterLayout>
-    </>
+    </ProtectedRoute>
   );
 };
 

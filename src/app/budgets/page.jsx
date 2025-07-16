@@ -1,15 +1,13 @@
+"use client";
+
 import Breadcrumb from "@/components/Breadcrumb";
 import BudgetManager from "@/components/BudgetManager";
 import MasterLayout from "@/masterLayout/MasterLayout";
-
-export const metadata = {
-  title: "Gerenciar Orçamentos - WowDash NEXT JS",
-  description: "Gerencie orçamentos dos clientes",
-};
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
 
 const BudgetsPage = () => {
   return (
-    <>
+    <ProtectedRoute requiredRole="admin">
       <MasterLayout>
         <Breadcrumb 
           title='Gerenciar Orçamentos' 
@@ -20,7 +18,7 @@ const BudgetsPage = () => {
         />
         <BudgetManager />
       </MasterLayout>
-    </>
+    </ProtectedRoute>
   );
 };
 

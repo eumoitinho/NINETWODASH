@@ -16,49 +16,40 @@ const AgencyDashboard = () => {
 
   const [recentClients, setRecentClients] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Simular carregamento de dados
-    setTimeout(() => {
-      setStats({
-        totalClients: 12,
-        activeClients: 8,
-        totalRevenue: 125000,
-        avgConversionRate: 3.2,
-        totalSpend: 45000,
-        totalConversions: 1250
-      });
-
-      setRecentClients([
-        {
-          id: 1,
-          name: "TechCorp Solutions",
-          status: "active",
-          lastSync: "2024-01-15",
-          monthlyBudget: 15000,
-          avatar: "assets/images/avatar/avatar-1.png"
-        },
-        {
-          id: 2,
-          name: "E-commerce Store",
-          status: "active",
-          lastSync: "2024-01-14",
-          monthlyBudget: 8000,
-          avatar: "assets/images/avatar/avatar-2.png"
-        },
-        {
-          id: 3,
-          name: "StartupXYZ",
-          status: "pending",
-          lastSync: null,
-          monthlyBudget: 5000,
-          avatar: "assets/images/avatar/avatar-3.png"
-        }
-      ]);
-
-      setIsLoading(false);
-    }, 1000);
+    fetchDashboardData();
   }, []);
+
+  const fetchDashboardData = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      // Buscar estatísticas da agência
+      const statsResponse = await fetch('/api/admin/dashboard/stats');
+      const statsData = await statsResponse.json();
+
+      if (statsResponse.ok) {
+        setStats(statsData.data);
+      }
+
+      // Buscar clientes recentes
+      const clientsResponse = await fetch('/api/admin/clients?limit=5');
+      const clientsData = await clientsResponse.json();
+
+      if (clientsResponse.ok) {
+        setRecentClients(clientsData.data || []);
+      }
+
+    } catch (err) {
+      console.error('Erro ao carregar dashboard:', err);
+      setError('Erro ao carregar dados do dashboard');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const formatCurrency = (num) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -67,8 +58,37 @@ const AgencyDashboard = () => {
     }).format(num);
   };
 
+  const formatDate = (dateString) => {
+    if (!dateString) return 'Não sincronizado';
+    
+    const date = new Date(dateString);
+    return date.toLocaleDateString('pt-BR');
+  };
+
   if (isLoading) {
     return <LoadingSpinner text="Carregando dashboard..." />;
+  }
+
+  if (error) {
+    return (
+      <div className="row">
+        <div className="col-12">
+          <div className="card">
+            <div className="card-body text-center">
+              <Icon icon="solar:close-circle-bold" className="text-danger text-4xl mb-3" />
+              <h5>Erro ao carregar dashboard</h5>
+              <p className="text-muted">{error}</p>
+              <button 
+                className="btn btn-primary" 
+                onClick={fetchDashboardData}
+              >
+                Tentar novamente
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -156,74 +176,96 @@ const AgencyDashboard = () => {
             </Link>
           </div>
           <div className="card-body">
-            <div className="table-responsive">
-              <table className="table table-hover">
-                <thead>
-                  <tr>
-                    <th>Cliente</th>
-                    <th>Status</th>
-                    <th>Última Sincronização</th>
-                    <th>Orçamento Mensal</th>
-                    <th>Ações</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {recentClients.map((client) => (
-                    <tr key={client.id}>
-                      <td>
-                        <div className="d-flex align-items-center">
-                          <img
-                            src={client.avatar}
-                            alt={client.name}
-                            className="rounded-circle me-3"
-                            width="40"
-                            height="40"
-                          />
-                          <div>
-                            <h6 className="mb-0">{client.name}</h6>
-                          </div>
-                        </div>
-                      </td>
-                      <td>
-                        <span className={`badge ${client.status === 'active' ? 'bg-success-subtle text-success-main' : 'bg-warning-subtle text-warning-main'}`}>
-                          {client.status === 'active' ? 'Ativo' : 'Pendente'}
-                        </span>
-                      </td>
-                      <td>
-                        {client.lastSync ? (
-                          <span className="text-muted">{client.lastSync}</span>
-                        ) : (
-                          <span className="text-warning">Não sincronizado</span>
-                        )}
-                      </td>
-                      <td>
-                        <span className="fw-semibold">
-                          {formatCurrency(client.monthlyBudget)}
-                        </span>
-                      </td>
-                      <td>
-                        <div className="btn-group" role="group">
-                          <Link
-                            href={`/client-analytics/${client.id}`}
-                            className="btn btn-sm btn-outline-primary"
-                            title="Ver Analytics"
-                          >
-                            <Icon icon="solar:chart-2-bold" />
-                          </Link>
-                          <Link
-                            href={`/edit-client/${client.id}`}
-                            className="btn btn-sm btn-outline-secondary"
-                            title="Editar"
-                          >
-                            <Icon icon="solar:pen-bold" />
-                          </Link>
-                        </div>
-                      </td>
+            {recentClients.length === 0 ? (
+              <div className="text-center py-4">
+                <Icon icon="solar:users-group-rounded-bold" className="text-muted text-4xl mb-3" />
+                <h6>Nenhum cliente encontrado</h6>
+                <p className="text-muted">Adicione clientes para começar</p>
+                <Link href="/add-client" className="btn btn-primary btn-sm">
+                  <Icon icon="solar:add-circle-bold" className="me-2" />
+                  Adicionar Cliente
+                </Link>
+              </div>
+            ) : (
+              <div className="table-responsive">
+                <table className="table table-hover">
+                  <thead>
+                    <tr>
+                      <th>Cliente</th>
+                      <th>Status</th>
+                      <th>Última Sincronização</th>
+                      <th>Orçamento Mensal</th>
+                      <th>Ações</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {recentClients.map((client) => (
+                      <tr key={client._id}>
+                        <td>
+                          <div className="d-flex align-items-center">
+                            {client.avatar ? (
+                              <img
+                                src={client.avatar}
+                                alt={client.name}
+                                className="rounded-circle me-3"
+                                width="40"
+                                height="40"
+                              />
+                            ) : (
+                              <div className="rounded-circle bg-primary d-flex align-items-center justify-content-center text-white me-3" 
+                                   style={{width: '40px', height: '40px'}}>
+                                {client.name.charAt(0).toUpperCase()}
+                              </div>
+                            )}
+                            <div>
+                              <h6 className="mb-0">{client.name}</h6>
+                              <small className="text-muted">{client.email}</small>
+                            </div>
+                          </div>
+                        </td>
+                        <td>
+                          <span className={`badge ${client.status === 'active' ? 'bg-success-subtle text-success-main' : 'bg-warning-subtle text-warning-main'}`}>
+                            {client.status === 'active' ? 'Ativo' : 'Pendente'}
+                          </span>
+                        </td>
+                        <td>
+                          {client.googleAnalytics?.lastSync || client.facebookAds?.lastSync ? (
+                            <span className="text-muted">
+                              {formatDate(client.googleAnalytics?.lastSync || client.facebookAds?.lastSync)}
+                            </span>
+                          ) : (
+                            <span className="text-warning">Não sincronizado</span>
+                          )}
+                        </td>
+                        <td>
+                          <span className="fw-semibold">
+                            {formatCurrency(client.monthlyBudget)}
+                          </span>
+                        </td>
+                        <td>
+                          <div className="btn-group" role="group">
+                            <Link
+                              href={`/client-analytics/${client.slug}`}
+                              className="btn btn-sm btn-outline-primary"
+                              title="Ver Analytics"
+                            >
+                              <Icon icon="solar:chart-2-bold" />
+                            </Link>
+                            <Link
+                              href={`/edit-client/${client.slug}`}
+                              className="btn btn-sm btn-outline-secondary"
+                              title="Editar"
+                            >
+                              <Icon icon="solar:pen-bold" />
+                            </Link>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -1,57 +1,148 @@
 "use client";
+
 import React, { useState, useEffect } from 'react';
 import { Icon } from "@iconify/react/dist/iconify.js";
+import LoadingSpinner from './LoadingSpinner';
 import Notification from './Notification';
 
-const AddEditClient = ({ clientId = null }) => {
+const AddEditClient = ({ clientSlug = null }) => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
+    slug: '',
     phone: '',
     company: '',
     website: '',
-    monthlyBudget: '',
-    status: 'pending',
+    monthlyBudget: 0,
+    status: 'active',
     tags: '',
-    ga4PropertyId: '',
-    ga4ViewId: '',
-    metaAdAccountId: '',
-    metaPixelId: '',
-    notes: ''
+    notes: '',
+    portalSettings: {
+      primaryColor: '#3B82F6',
+      secondaryColor: '#8B5CF6',
+      allowedSections: ['dashboard', 'campanhas', 'analytics', 'relatorios'],
+    },
+    googleAds: {
+      customerId: '',
+      managerId: '',
+      connected: false,
+    },
+    facebookAds: {
+      adAccountId: '',
+      pixelId: '',
+      connected: false,
+    },
+    googleAnalytics: {
+      propertyId: '',
+      viewId: '',
+      connected: false,
+    },
   });
 
   const [isLoading, setIsLoading] = useState(false);
-  const [isEditing] = useState(!!clientId);
+  const [isLoadingData, setIsLoadingData] = useState(false);
+  const [isEditing] = useState(!!clientSlug);
   const [notification, setNotification] = useState(null);
+  const [showHelpModal, setShowHelpModal] = useState(false);
+  const [activeHelpTab, setActiveHelpTab] = useState('googleAnalytics');
 
   useEffect(() => {
-    if (clientId) {
-      // Carregar dados do cliente para edição
-      // Aqui você faria uma chamada API
-      setFormData({
-        name: 'TechCorp Solutions',
-        email: 'contato@techcorp.com',
-        phone: '(11) 99999-9999',
-        company: 'TechCorp Solutions Ltda',
-        website: 'https://techcorp.com',
-        monthlyBudget: '15000',
-        status: 'active',
-        tags: 'E-commerce, Premium',
-        ga4PropertyId: 'GA4_PROPERTY_ID',
-        ga4ViewId: 'GA4_VIEW_ID',
-        metaAdAccountId: 'META_AD_ACCOUNT_ID',
-        metaPixelId: 'META_PIXEL_ID',
-        notes: 'Cliente ativo com campanhas em andamento'
-      });
+    if (clientSlug) {
+      fetchClientData();
     }
-  }, [clientId]);
+  }, [clientSlug]);
+
+  // Debug: logar formData sempre que mudar
+  useEffect(() => {
+    console.log('🔄 FormData atualizado:', formData);
+  }, [formData]);
+
+  const fetchClientData = async () => {
+    if (!clientSlug) return;
+    
+    setIsLoadingData(true);
+    try {
+      console.log('🔍 Buscando dados do cliente:', clientSlug);
+      const response = await fetch(`/api/admin/clients/${clientSlug}`);
+      if (response.ok) {
+        const data = await response.json();
+        console.log('📦 Dados recebidos da API:', data);
+        if (data.success) {
+          const client = data.data;
+          console.log('👤 Dados do cliente:', client);
+          console.log('📊 Google Analytics:', client.googleAnalytics);
+          console.log('📘 Facebook Ads:', client.facebookAds);
+          console.log('🎯 Google Ads:', client.googleAds);
+          
+          setFormData({
+            name: client.name || '',
+            email: client.email || '',
+            slug: client.slug || '',
+            phone: client.phone || '',
+            company: client.company || '',
+            website: client.website || '',
+            monthlyBudget: client.monthlyBudget || 0,
+            status: client.status || 'active',
+            tags: client.tags ? client.tags.join(', ') : '',
+            notes: client.notes || '',
+            portalSettings: {
+              primaryColor: client.portalSettings?.primaryColor || '#3B82F6',
+              secondaryColor: client.portalSettings?.secondaryColor || '#8B5CF6',
+              allowedSections: client.portalSettings?.allowedSections || ['dashboard', 'campanhas', 'analytics', 'relatorios'],
+            },
+            googleAds: {
+              customerId: client.googleAds?.customerId || '',
+              managerId: client.googleAds?.managerId || '',
+              connected: client.googleAds?.connected || false,
+            },
+            facebookAds: {
+              adAccountId: client.facebookAds?.adAccountId || '',
+              pixelId: client.facebookAds?.pixelId || '',
+              connected: client.facebookAds?.connected || false,
+            },
+            googleAnalytics: {
+              propertyId: client.googleAnalytics?.propertyId || '',
+              viewId: client.googleAnalytics?.viewId || '',
+              connected: client.googleAnalytics?.connected || false,
+            },
+          });
+          console.log('✅ FormData atualizado com sucesso');
+        } else {
+          console.error('❌ API retornou erro:', data);
+        }
+      } else {
+        console.error('❌ Erro na resposta da API:', response.status);
+      }
+    } catch (error) {
+      console.error('❌ Erro ao carregar dados do cliente:', error);
+      setNotification({
+        type: 'error',
+        title: 'Erro',
+        message: 'Erro ao carregar dados do cliente'
+      });
+    } finally {
+      setIsLoadingData(false);
+    }
+  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    
+    if (name.includes('.')) {
+      const [parent, child] = name.split('.');
+      setFormData(prev => ({
+        ...prev,
+        [parent]: {
+          ...prev[parent],
+          [child]: value
+        }
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -59,21 +150,82 @@ const AddEditClient = ({ clientId = null }) => {
     setIsLoading(true);
     
     try {
-      // Aqui você faria a chamada API para salvar
-      console.log('Dados do cliente:', formData);
+      // Processar tags
+      const tags = formData.tags ? formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag) : [];
       
-      // Simular delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const submitData = {
+        ...formData,
+        tags,
+        slug: formData.slug || formData.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
+      };
+
+      const url = isEditing ? `/api/admin/clients/${clientSlug}` : '/api/admin/clients';
+      const method = isEditing ? 'PUT' : 'POST';
       
-      setNotification({
-        type: 'success',
-        title: 'Sucesso!',
-        message: isEditing ? 'Cliente atualizado com sucesso!' : 'Cliente adicionado com sucesso!'
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(submitData),
       });
+
+      const result = await response.json();
+      
+      if (result.success) {
+        setNotification({
+          type: 'success',
+          title: 'Sucesso',
+          message: isEditing ? 'Cliente atualizado com sucesso!' : 'Cliente adicionado com sucesso!'
+        });
+        
+        if (!isEditing) {
+          // Limpar formulário após adicionar
+          setFormData({
+            name: '',
+            email: '',
+            slug: '',
+            phone: '',
+            company: '',
+            website: '',
+            monthlyBudget: 0,
+            status: 'active',
+            tags: '',
+            notes: '',
+            portalSettings: {
+              primaryColor: '#3B82F6',
+              secondaryColor: '#8B5CF6',
+              allowedSections: ['dashboard', 'campanhas', 'analytics', 'relatorios'],
+            },
+            googleAds: {
+              customerId: '',
+              managerId: '',
+              connected: false,
+            },
+            facebookAds: {
+              adAccountId: '',
+              pixelId: '',
+              connected: false,
+            },
+            googleAnalytics: {
+              propertyId: '',
+              viewId: '',
+              connected: false,
+            },
+          });
+        }
+      } else {
+        setNotification({
+          type: 'error',
+          title: 'Erro',
+          message: result.message || 'Erro ao salvar cliente'
+        });
+      }
     } catch (error) {
+      console.error('Erro ao salvar cliente:', error);
       setNotification({
         type: 'error',
-        title: 'Erro!',
+        title: 'Erro',
         message: 'Erro ao salvar cliente'
       });
     } finally {
@@ -84,23 +236,218 @@ const AddEditClient = ({ clientId = null }) => {
   const testConnection = async (platform) => {
     setIsLoading(true);
     try {
-      // Simular teste de conexão
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      setNotification({
-        type: 'success',
-        title: 'Conexão Testada!',
-        message: `Conexão com ${platform} testada com sucesso!`
+      const response = await fetch(`/api/test-connection/${platform}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          clientSlug,
+          credentials: formData[platform]
+        }),
       });
+
+      const result = await response.json();
+      
+      if (result.success) {
+        const timestamp = new Date().toISOString();
+        
+        // Marcar plataforma como conectada
+        setFormData(prev => ({
+          ...prev,
+          [platform]: {
+            ...prev[platform],
+            connected: true,
+            lastSync: timestamp
+          }
+        }));
+
+        // Salvar no banco de dados se estivermos editando um cliente
+        if (clientSlug) {
+          try {
+            await fetch(`/api/admin/clients/${clientSlug}/connection`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                platform,
+                connected: true,
+                lastSync: timestamp,
+                connectionData: result.data
+              }),
+            });
+          } catch (error) {
+            console.error('Erro ao salvar conexão no banco:', error);
+          }
+        }
+
+        setNotification({
+          type: 'success',
+          title: 'Conexão Estabelecida!',
+          message: `Conexão ${platform} testada com sucesso! Plataforma agora está conectada.`
+        });
+      } else {
+        setNotification({
+          type: 'error',
+          title: 'Erro na Conexão',
+          message: result.message || `Erro ao testar conexão ${platform}`
+        });
+      }
     } catch (error) {
       setNotification({
         type: 'error',
-        title: 'Erro de Conexão!',
-        message: `Erro ao conectar com ${platform}`
+        title: 'Erro',
+        message: `Erro ao testar conexão ${platform}`
       });
     } finally {
       setIsLoading(false);
     }
   };
+
+  const HelpModal = () => (
+    <>
+      <div className={`modal-backdrop fade ${showHelpModal ? 'show' : ''}`} 
+           style={{ display: showHelpModal ? 'block' : 'none' }}></div>
+      <div className={`modal fade ${showHelpModal ? 'show' : ''}`} 
+           style={{ display: showHelpModal ? 'block' : 'none' }}
+           tabIndex="-1">
+        <div className="modal-dialog modal-lg">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h5 className="modal-title">
+                <Icon icon="solar:info-circle-bold" className="me-2" />
+                Como Obter os IDs das Plataformas
+              </h5>
+              <button 
+                type="button" 
+                className="btn-close" 
+                onClick={() => setShowHelpModal(false)}
+              ></button>
+            </div>
+            <div className="modal-body">
+              {/* Tabs */}
+              <ul className="nav nav-tabs mb-3">
+                <li className="nav-item">
+                  <button
+                    className={`nav-link ${activeHelpTab === 'googleAnalytics' ? 'active' : ''}`}
+                    onClick={() => setActiveHelpTab('googleAnalytics')}
+                  >
+                    <Icon icon="logos:google-analytics" className="me-2" />
+                    Google Analytics 4
+                  </button>
+                </li>
+                <li className="nav-item">
+                  <button
+                    className={`nav-link ${activeHelpTab === 'metaAds' ? 'active' : ''}`}
+                    onClick={() => setActiveHelpTab('metaAds')}
+                  >
+                    <Icon icon="logos:facebook" className="me-2" />
+                    Meta Ads
+                  </button>
+                </li>
+                <li className="nav-item">
+                  <button
+                    className={`nav-link ${activeHelpTab === 'googleAds' ? 'active' : ''}`}
+                    onClick={() => setActiveHelpTab('googleAds')}
+                  >
+                    <Icon icon="logos:google-ads" className="me-2" />
+                    Google Ads
+                  </button>
+                </li>
+              </ul>
+
+              {/* Google Analytics 4 */}
+              {activeHelpTab === 'googleAnalytics' && (
+                <div>
+                  <div className="alert alert-info">
+                    <Icon icon="solar:info-circle-bold" className="me-2" />
+                    <strong>Importante:</strong> No GA4, não existe mais "View ID" como no Universal Analytics.
+                  </div>
+                  
+                  <h6>📊 Property ID</h6>
+                  <ol>
+                    <li>Acesse <a href="https://analytics.google.com/" target="_blank" rel="noopener">Google Analytics</a></li>
+                    <li>Selecione sua propriedade GA4</li>
+                    <li>Vá em <strong>Administrador</strong> (ícone de engrenagem)</li>
+                    <li>Na coluna <strong>Propriedade</strong>, clique em <strong>Configurações da propriedade</strong></li>
+                    <li>O <strong>ID da propriedade</strong> aparece no topo (formato: <code>123456789</code>)</li>
+                  </ol>
+                  
+                  <div className="mt-3 p-3 bg-light rounded">
+                    <h6>💡 Dica</h6>
+                    <p className="mb-0">Se você ainda usa Universal Analytics, migre para GA4 para ter acesso aos dados mais recentes.</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Meta Ads */}
+              {activeHelpTab === 'metaAds' && (
+                <div>
+                  <h6>📘 Ad Account ID</h6>
+                  <ol>
+                    <li>Acesse <a href="https://business.facebook.com/" target="_blank" rel="noopener">Facebook Business Manager</a></li>
+                    <li>Vá em <strong>Contas de anúncios</strong></li>
+                    <li>Selecione sua conta de anúncios</li>
+                    <li>O <strong>ID da conta de anúncios</strong> aparece no formato: <code>act_123456789012345</code></li>
+                  </ol>
+
+                  <h6 className="mt-4">🎯 Pixel ID</h6>
+                  <ol>
+                    <li>No Business Manager, vá em <strong>Eventos</strong> → <strong>Pixels</strong></li>
+                    <li>Selecione seu pixel ou crie um novo</li>
+                    <li>O <strong>ID do pixel</strong> aparece no formato: <code>123456789012345</code></li>
+                  </ol>
+
+                  <div className="mt-3 p-3 bg-light rounded">
+                    <h6>💡 Dica</h6>
+                    <p className="mb-0">Se você não tem um pixel, crie um novo para rastrear conversões e otimizar campanhas.</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Google Ads */}
+              {activeHelpTab === 'googleAds' && (
+                <div>
+                  <h6>🎯 Customer ID</h6>
+                  <ol>
+                    <li>Acesse <a href="https://ads.google.com/" target="_blank" rel="noopener">Google Ads</a></li>
+                    <li>Vá em <strong>Configurações</strong> → <strong>Detalhes da conta</strong></li>
+                    <li>O <strong>ID do cliente</strong> aparece no formato: <code>123-456-7890</code> (sem hífens)</li>
+                  </ol>
+
+                  <h6 className="mt-4">👥 Manager ID (Opcional)</h6>
+                  <ol>
+                    <li>Se você usa um Google Ads Manager Account:</li>
+                    <li>Vá em <strong>Configurações</strong> → <strong>Conta do gerente</strong></li>
+                    <li>O <strong>ID do gerente</strong> aparece no formato: <code>123-456-7890</code></li>
+                  </ol>
+
+                  <div className="mt-3 p-3 bg-light rounded">
+                    <h6>💡 Dica</h6>
+                    <p className="mb-0">O Manager ID é opcional e só necessário se você gerencia múltiplas contas Google Ads.</p>
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="modal-footer">
+              <button 
+                type="button" 
+                className="btn btn-secondary" 
+                onClick={() => setShowHelpModal(false)}
+              >
+                Fechar
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+
+  if (isLoadingData) {
+    return <LoadingSpinner text="Carregando dados do cliente..." />;
+  }
 
   return (
     <div className="row">
@@ -116,10 +463,18 @@ const AddEditClient = ({ clientId = null }) => {
       )}
       <div className="col-12">
         <div className="card">
-          <div className="card-header">
+          <div className="card-header d-flex justify-content-between align-items-center">
             <h5 className="card-title mb-0">
               {isEditing ? 'Editar Cliente' : 'Adicionar Novo Cliente'}
             </h5>
+            <button
+              type="button"
+              className="btn btn-outline-info"
+              onClick={() => setShowHelpModal(true)}
+            >
+              <Icon icon="solar:question-circle-bold" className="me-2" />
+              Como Obter IDs
+            </button>
           </div>
           <div className="card-body">
             <form onSubmit={handleSubmit}>
@@ -220,21 +575,9 @@ const AddEditClient = ({ clientId = null }) => {
                       name="tags"
                       value={formData.tags}
                       onChange={handleInputChange}
-                      placeholder="E-commerce, Premium, Startup (separadas por vírgula)"
+                      placeholder="E-commerce, Premium, etc."
                     />
                     <small className="text-muted">Separe as tags por vírgula</small>
-                  </div>
-
-                  <div className="mb-3">
-                    <label className="form-label">Orçamento Mensal (R$)</label>
-                    <input
-                      type="number"
-                      className="form-control"
-                      name="monthlyBudget"
-                      value={formData.monthlyBudget}
-                      onChange={handleInputChange}
-                      placeholder="0.00"
-                    />
                   </div>
                 </div>
 
@@ -243,92 +586,162 @@ const AddEditClient = ({ clientId = null }) => {
                   <h6 className="mb-3">Configurações de API</h6>
                   
                   {/* Google Analytics 4 */}
-                  <div className="mb-4">
-                    <div className="d-flex align-items-center justify-content-between mb-2">
-                      <h6 className="mb-0">
+                  <div className="card mb-3">
+                    <div className="card-header d-flex justify-content-between align-items-center">
+                      <div className="d-flex align-items-center">
                         <Icon icon="logos:google-analytics" className="me-2" />
-                        Google Analytics 4
-                      </h6>
+                        <span>Google Analytics 4</span>
+                        {formData.googleAnalytics.connected && (
+                          <span className="badge bg-success ms-2">
+                            <Icon icon="solar:check-circle-bold" className="me-1" />
+                            Conectado
+                          </span>
+                        )}
+                      </div>
                       <button
                         type="button"
-                        className="btn btn-sm btn-outline-primary"
-                        onClick={() => testConnection('Google Analytics 4')}
+                        className={`btn btn-sm ${formData.googleAnalytics.connected ? 'btn-outline-success' : 'btn-outline-primary'}`}
+                        onClick={() => testConnection('googleAnalytics')}
                         disabled={isLoading}
                       >
                         <Icon icon="solar:refresh-bold" className="me-1" />
-                        Testar
+                        {formData.googleAnalytics.connected ? 'Reconectar' : 'Testar'}
                       </button>
                     </div>
-                    
-                    <div className="mb-3">
-                      <label className="form-label">Property ID</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        name="ga4PropertyId"
-                        value={formData.ga4PropertyId}
-                        onChange={handleInputChange}
-                        placeholder="123456789"
-                      />
-                    </div>
-
-                    <div className="mb-3">
-                      <label className="form-label">View ID</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        name="ga4ViewId"
-                        value={formData.ga4ViewId}
-                        onChange={handleInputChange}
-                        placeholder="123456789"
-                      />
+                    <div className="card-body">
+                      <div className="mb-3">
+                        <label className="form-label">Property ID</label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          name="googleAnalytics.propertyId"
+                          value={formData.googleAnalytics.propertyId}
+                          onChange={handleInputChange}
+                          placeholder="123456789"
+                        />
+                      </div>
+                      {formData.googleAnalytics.connected && formData.googleAnalytics.lastSync && (
+                        <div className="text-muted small mt-2">
+                          <Icon icon="solar:time-bold" className="me-1" />
+                          Conectado em: {new Date(formData.googleAnalytics.lastSync).toLocaleString('pt-BR')}
+                        </div>
+                      )}
                     </div>
                   </div>
 
                   {/* Meta Ads */}
-                  <div className="mb-4">
-                    <div className="d-flex align-items-center justify-content-between mb-2">
-                      <h6 className="mb-0">
+                  <div className="card mb-3">
+                    <div className="card-header d-flex justify-content-between align-items-center">
+                      <div className="d-flex align-items-center">
                         <Icon icon="logos:facebook" className="me-2" />
-                        Meta Ads
-                      </h6>
+                        <span>Meta Ads</span>
+                        {formData.facebookAds.connected && (
+                          <span className="badge bg-success ms-2">
+                            <Icon icon="solar:check-circle-bold" className="me-1" />
+                            Conectado
+                          </span>
+                        )}
+                      </div>
                       <button
                         type="button"
-                        className="btn btn-sm btn-outline-primary"
-                        onClick={() => testConnection('Meta Ads')}
+                        className={`btn btn-sm ${formData.facebookAds.connected ? 'btn-outline-success' : 'btn-outline-primary'}`}
+                        onClick={() => testConnection('facebookAds')}
                         disabled={isLoading}
                       >
                         <Icon icon="solar:refresh-bold" className="me-1" />
-                        Testar
+                        {formData.facebookAds.connected ? 'Reconectar' : 'Testar'}
                       </button>
                     </div>
-                    
-                    <div className="mb-3">
-                      <label className="form-label">Ad Account ID</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        name="metaAdAccountId"
-                        value={formData.metaAdAccountId}
-                        onChange={handleInputChange}
-                        placeholder="act_123456789"
-                      />
-                    </div>
-
-                    <div className="mb-3">
-                      <label className="form-label">Pixel ID</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        name="metaPixelId"
-                        value={formData.metaPixelId}
-                        onChange={handleInputChange}
-                        placeholder="123456789"
-                      />
+                    <div className="card-body">
+                      <div className="mb-3">
+                        <label className="form-label">Ad Account ID</label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          name="facebookAds.adAccountId"
+                          value={formData.facebookAds.adAccountId}
+                          onChange={handleInputChange}
+                          placeholder="act_123456789"
+                        />
+                      </div>
+                      <div className="mb-3">
+                        <label className="form-label">Pixel ID</label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          name="facebookAds.pixelId"
+                          value={formData.facebookAds.pixelId}
+                          onChange={handleInputChange}
+                          placeholder="123456789"
+                        />
+                      </div>
+                      {formData.facebookAds.connected && formData.facebookAds.lastSync && (
+                        <div className="text-muted small mt-2">
+                          <Icon icon="solar:time-bold" className="me-1" />
+                          Conectado em: {new Date(formData.facebookAds.lastSync).toLocaleString('pt-BR')}
+                        </div>
+                      )}
                     </div>
                   </div>
 
-                  {/* Observações */}
+                  {/* Google Ads */}
+                  <div className="card mb-3">
+                    <div className="card-header d-flex justify-content-between align-items-center">
+                      <div className="d-flex align-items-center">
+                        <Icon icon="logos:google-ads" className="me-2" />
+                        <span>Google Ads</span>
+                        {formData.googleAds.connected && (
+                          <span className="badge bg-success ms-2">
+                            <Icon icon="solar:check-circle-bold" className="me-1" />
+                            Conectado
+                          </span>
+                        )}
+                      </div>
+                      <button
+                        type="button"
+                        className={`btn btn-sm ${formData.googleAds.connected ? 'btn-outline-success' : 'btn-outline-primary'}`}
+                        onClick={() => testConnection('googleAds')}
+                        disabled={isLoading}
+                      >
+                        <Icon icon="solar:refresh-bold" className="me-1" />
+                        {formData.googleAds.connected ? 'Reconectar' : 'Testar'}
+                      </button>
+                    </div>
+                    <div className="card-body">
+                      <div className="mb-3">
+                        <label className="form-label">Customer ID</label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          name="googleAds.customerId"
+                          value={formData.googleAds.customerId}
+                          onChange={handleInputChange}
+                          placeholder="123-456-7890"
+                        />
+                      </div>
+                      <div className="mb-3">
+                        <label className="form-label">Manager ID</label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          name="googleAds.managerId"
+                          value={formData.googleAds.managerId}
+                          onChange={handleInputChange}
+                          placeholder="123-456-7890"
+                        />
+                      </div>
+                      {formData.googleAds.connected && formData.googleAds.lastSync && (
+                        <div className="text-muted small mt-2">
+                          <Icon icon="solar:time-bold" className="me-1" />
+                          Conectado em: {new Date(formData.googleAds.lastSync).toLocaleString('pt-BR')}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Observações */}
+                <div className="col-12">
                   <div className="mb-3">
                     <label className="form-label">Observações</label>
                     <textarea
@@ -341,9 +754,8 @@ const AddEditClient = ({ clientId = null }) => {
                     />
                   </div>
                 </div>
-              </div>
 
-              <div className="row mt-4">
+                {/* Botões */}
                 <div className="col-12">
                   <div className="d-flex gap-2">
                     <button
@@ -353,20 +765,19 @@ const AddEditClient = ({ clientId = null }) => {
                     >
                       {isLoading ? (
                         <>
-                          <Icon icon="solar:loading-bold" className="me-2" spin />
+                          <span className="spinner-border spinner-border-sm me-2" />
                           Salvando...
                         </>
                       ) : (
                         <>
                           <Icon icon="solar:check-circle-bold" className="me-2" />
-                          {isEditing ? 'Atualizar Cliente' : 'Adicionar Cliente'}
+                          {isEditing ? 'Atualizar' : 'Adicionar'}
                         </>
                       )}
                     </button>
-                    
                     <button
                       type="button"
-                      className="btn btn-secondary"
+                      className="btn btn-outline-secondary"
                       onClick={() => window.history.back()}
                     >
                       Cancelar
@@ -378,6 +789,9 @@ const AddEditClient = ({ clientId = null }) => {
           </div>
         </div>
       </div>
+      
+      {/* Help Modal */}
+      {showHelpModal && <HelpModal />}
     </div>
   );
 };
