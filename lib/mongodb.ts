@@ -472,12 +472,12 @@ export const ActivityLog = mongoose.models.ActivityLog || mongoose.model('Activi
 // Helper functions
 export async function findClientBySlug(slug: string) {
   await connectToDatabase();
-  return await Client.findOne({ slug, status: { $ne: 'inactive' } });
+  return await (Client as any).findOne({ slug, status: { $ne: 'inactive' } });
 }
 
 export async function findUserByEmail(email: string) {
   await connectToDatabase();
-  return await User.findOne({ email, isActive: true });
+  return await (User as any).findOne({ email, isActive: true });
 }
 
 export async function logActivity(
@@ -508,7 +508,7 @@ export async function getClientCampaigns(clientId: string, platform?: string) {
     filter.platform = platform;
   }
   
-  return await Campaign.find(filter)
+  return await (Campaign as any).find(filter)
     .sort({ updatedAt: -1 })
     .populate('clientId', 'name email slug');
 }
@@ -521,7 +521,7 @@ export async function saveMetricsData(
 ) {
   await connectToDatabase();
   
-  const campaign = await Campaign.findOneAndUpdate(
+  const campaign = await (Campaign as any).findOneAndUpdate(
     { clientId, campaignId, platform },
     {
       clientId,

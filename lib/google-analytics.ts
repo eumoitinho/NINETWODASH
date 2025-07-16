@@ -3,9 +3,8 @@
  * Handles authentication and data fetching from Google Analytics 4
  */
 
-import { google } from 'googleapis';
 import { BetaAnalyticsDataClient } from '@google-analytics/data';
-import type { Campaign, CampaignMetrics } from '../types/dashboard';
+
 import { format, subDays } from 'date-fns';
 
 // Google Analytics 4 configuration
