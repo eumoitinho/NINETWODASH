@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { withCache, generateCacheKey } from '@/lib/cache';
-import { connectToDatabase, findClientBySlug, findRecentCampaigns } from '@/lib/mongodb';
+import { prisma } from '@/lib/database';
 import { getServerSession } from 'next-auth';
 import type { 
   APIResponse, 
@@ -10,7 +10,7 @@ import type {
   Client,
   DashboardSummary 
 } from '@/types/dashboard';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { authOptions } from '@/lib/auth';
 
 /**
  * GET /api/dashboard/[client]
@@ -38,11 +38,18 @@ export async function GET(
     const period = (searchParams.get('period') as '7d' | '30d' | '90d') || '30d';
     const useCache = searchParams.get('cache') !== 'false';
 
-    // Connect to database
-    await connectToDatabase();
+    // Validate client exists using Prisma
+    const clientData = await prisma.client.findUnique({
+      where: { slug: client },
+      include: {
+        campaigns: {
+          include: {
+            metrics: true
+          }
+        }
+      }
+    });
 
-    // Validate client exists
-    const clientData = await findClientBySlug(client);
     if (!clientData) {
       return NextResponse.json<APIResponse<null>>({
         success: false,
@@ -64,22 +71,21 @@ export async function GET(
       }, { status: 403 });
     }
 
-    // Convert MongoDB client to Client type
+    // Convert Prisma client to Client type
     const clientConfig: Client = {
-      id: clientData._id.toString(),
+      id: Number(clientData.id),
       name: clientData.name,
       email: clientData.email,
-      status: clientData.status,
-      ga4Connected: clientData.googleAnalytics?.connected || false,
-      metaConnected: clientData.facebookAds?.connected || false,
-      lastSync: clientData.updatedAt || new Date().toISOString(),
+      status: clientData.status as any,
+      ga4Connected: clientData.googleAnalyticsConnected || false,
+      metaConnected: clientData.facebookAdsConnected || false,
+      lastSync: clientData.updatedAt.toISOString(),
       monthlyBudget: clientData.monthlyBudget,
-      avatar: clientData.avatar,
+      avatar: clientData.avatar || undefined,
       tags: clientData.tags,
-      googleAdsCustomerId: clientData.googleAds?.customerId,
-      facebookAdAccountId: clientData.facebookAds?.accountId,
+      googleAdsCustomerId: clientData.googleAdsCustomerId || undefined,
+      facebookAdAccountId: clientData.facebookAdsAccountId || undefined,
     };
-
 
     // Generate cache key
     const cacheKey = generateCacheKey('client', client, { 
@@ -93,12 +99,12 @@ export async function GET(
       const dateRange = getDateRange(period);
       
       // Fetch campaigns from database for the period
-      const campaigns = await findRecentCampaigns(client, period);
+      const campaigns = await findRecentCampaigns(clientData.id, period);
       
       // Fetch data from APIs if credentials are configured
       const [googleAdsData, facebookAdsData] = await Promise.allSettled([
-        clientData.googleAds?.connected ? fetchGoogleAdsData(client, period, clientData) : Promise.resolve(null),
-        clientData.facebookAds?.connected ? fetchFacebookAdsData(client, period, clientData) : Promise.resolve(null),
+        clientData.googleAdsConnected ? fetchGoogleAdsData(client, period, clientData) : Promise.resolve(null),
+        clientData.facebookAdsConnected ? fetchFacebookAdsData(client, period, clientData) : Promise.resolve(null),
       ]);
 
       // Process API results
@@ -131,7 +137,6 @@ export async function GET(
           googleAds: googleAdsData.status === 'fulfilled',
           facebookAds: facebookAdsData.status === 'fulfilled',
           mock: false,
-          // Removido o campo 'database' pois não existe em 'DataSource'
         },
       };
     };
@@ -164,12 +169,67 @@ export async function GET(
 }
 
 /**
+ * Find recent campaigns using Prisma
+ */
+async function findRecentCampaigns(clientId: string, period: '7d' | '30d' | '90d'): Promise<Campaign[]> {
+  // Calculate date range
+  const days = period === '7d' ? 7 : period === '30d' ? 30 : 90;
+  const startDate = new Date();
+  startDate.setDate(startDate.getDate() - days);
+  
+  // Find campaigns for the client in the period
+  const campaigns = await prisma.campaign.findMany({
+    where: {
+      clientId: clientId,
+      updatedAt: { gte: startDate },
+      status: 'active'
+    },
+    include: {
+      metrics: {
+        orderBy: { date: 'desc' },
+        take: 1
+      }
+    },
+    orderBy: { updatedAt: 'desc' }
+  });
+  
+  return campaigns.map((campaign): Campaign => ({
+    campaignId: campaign.campaignId,
+    campaignName: campaign.campaignName,
+    platform: campaign.platform as any,
+    status: campaign.status as any,
+    date: campaign.updatedAt.toISOString().split('T')[0],
+    metrics: campaign.metrics[0] ? {
+      impressions: campaign.metrics[0].impressions,
+      clicks: campaign.metrics[0].clicks,
+      cost: campaign.metrics[0].cost,
+      conversions: campaign.metrics[0].conversions,
+      ctr: campaign.metrics[0].ctr,
+      cpc: campaign.metrics[0].cpc,
+      cpm: campaign.metrics[0].cpm,
+      conversionRate: campaign.metrics[0].conversionRate,
+      roas: campaign.metrics[0].roas,
+    } : {
+      impressions: 0,
+      clicks: 0,
+      cost: 0,
+      conversions: 0,
+      ctr: 0,
+      cpc: 0,
+      cpm: 0,
+      conversionRate: 0,
+      roas: 0,
+    },
+  }));
+}
+
+/**
  * Fetch Google Ads data from internal API
  */
 async function fetchGoogleAdsData(client: string, period: string, clientData: any) {
   try {
     // Only fetch if Google Ads is connected and has credentials
-    if (!clientData.googleAds?.connected || !clientData.googleAds?.customerId) {
+    if (!clientData.googleAdsConnected || !clientData.googleAdsCustomerId) {
       return null;
     }
 
@@ -203,7 +263,7 @@ async function fetchGoogleAdsData(client: string, period: string, clientData: an
 async function fetchFacebookAdsData(client: string, period: string, clientData: any) {
   try {
     // Only fetch if Facebook Ads is connected and has credentials
-    if (!clientData.facebookAds?.connected || !clientData.facebookAds?.accountId) {
+    if (!clientData.facebookAdsConnected || !clientData.facebookAdsAccountId) {
       return null;
     }
 
@@ -299,4 +359,3 @@ function getDateRange(period: '7d' | '30d' | '90d') {
     to: today.toISOString().split('T')[0],
   };
 }
-
