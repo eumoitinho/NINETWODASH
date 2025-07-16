@@ -10,7 +10,9 @@
       "Bash(mv:*)",
       "Bash(rm:*)",
       "Bash(npm run init-db:*)",
-      "Bash(npm run dev:*)"
+      "Bash(npm run dev:*)",
+      "Bash(ls:*)",
+      "Bash(pnpm build:*)"
     ],
     "deny": []
   }
