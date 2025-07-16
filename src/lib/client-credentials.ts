@@ -129,12 +129,12 @@ export async function saveGoogleAnalyticsCredentials(
 export async function getGoogleAdsCredentials(clientSlug: string): Promise<GoogleAdsCredentials | null> {
   try {
     
-    const client = await (Client as any).findOne({ slug: clientSlug });
-    if (!client?.googleAds?.encryptedCredentials) {
+    const client = await prisma.client.findUnique({ where: { slug: clientSlug } });
+    if (!client?.googleAdsEncryptedCredentials) {
       return null;
     }
     
-    const credentials = decryptCredentials(client.googleAds.encryptedCredentials);
+    const credentials = decryptCredentials(client.googleAdsEncryptedCredentials);
     return credentials as GoogleAdsCredentials;
   } catch (error) {
     console.error('Erro ao obter credenciais Google Ads:', error);
@@ -148,12 +148,12 @@ export async function getGoogleAdsCredentials(clientSlug: string): Promise<Googl
 export async function getFacebookAdsCredentials(clientSlug: string): Promise<FacebookAdsCredentials | null> {
   try {
     
-    const client = await (Client as any).findOne({ slug: clientSlug });
-    if (!client?.facebookAds?.encryptedCredentials) {
+    const client = await prisma.client.findUnique({ where: { slug: clientSlug } });
+    if (!client?.facebookAdsEncryptedCredentials) {
       return null;
     }
     
-    const credentials = decryptCredentials(client.facebookAds.encryptedCredentials);
+    const credentials = decryptCredentials(client.facebookAdsEncryptedCredentials);
     return credentials as FacebookAdsCredentials;
   } catch (error) {
     console.error('Erro ao obter credenciais Facebook Ads:', error);
@@ -167,12 +167,12 @@ export async function getFacebookAdsCredentials(clientSlug: string): Promise<Fac
 export async function getGoogleAnalyticsCredentials(clientSlug: string): Promise<GoogleAnalyticsCredentials | null> {
   try {
     
-    const client = await (Client as any).findOne({ slug: clientSlug });
-    if (!client?.googleAnalytics?.encryptedCredentials) {
+    const client = await prisma.client.findUnique({ where: { slug: clientSlug } });
+    if (!client?.googleAnalyticsEncryptedCredentials) {
       return null;
     }
     
-    const credentials = decryptCredentials(client.googleAnalytics.encryptedCredentials);
+    const credentials = decryptCredentials(client.googleAnalyticsEncryptedCredentials);
     return credentials as GoogleAnalyticsCredentials;
   } catch (error) {
     console.error('Erro ao obter credenciais Google Analytics:', error);
@@ -194,16 +194,14 @@ export async function testGoogleAdsConnection(clientSlug: string): Promise<boole
     // TODO: Implement actual API test when Google Ads client is available
     const isConnected = !!(credentials.customerId && credentials.developerId);
     
-    // Update connection status using slug
-    await (Client as any).updateOne(
-      { slug: clientSlug },
-      {
-        $set: {
-          'googleAds.connected': isConnected,
-          'googleAds.lastSync': isConnected ? new Date() : null,
-        }
+    // Update connection status using slug with Prisma
+    await prisma.client.update({
+      where: { slug: clientSlug },
+      data: {
+        googleAdsConnected: isConnected,
+        googleAdsLastSync: isConnected ? new Date() : null,
       }
-    );
+    });
     
     return isConnected;
   } catch (error) {
@@ -226,16 +224,14 @@ export async function testFacebookAdsConnection(clientSlug: string): Promise<boo
     // TODO: Implement actual API test when Facebook client is available
     const isConnected = !!(credentials.adAccountId && credentials.appId);
     
-    // Update connection status using slug
-    await (Client as any).updateOne(
-      { slug: clientSlug },
-      {
-        $set: {
-          'facebookAds.connected': isConnected,
-          'facebookAds.lastSync': isConnected ? new Date() : null,
-        }
+    // Update connection status using slug with Prisma
+    await prisma.client.update({
+      where: { slug: clientSlug },
+      data: {
+        facebookAdsConnected: isConnected,
+        facebookAdsLastSync: isConnected ? new Date() : null,
       }
-    );
+    });
     
     return isConnected;
   } catch (error) {
@@ -258,16 +254,14 @@ export async function testGoogleAnalyticsConnection(clientSlug: string): Promise
     // TODO: Implement actual API test when Google Analytics client is available
     const isConnected = !!(credentials.propertyId && (credentials.serviceAccountKey || credentials.clientEmail));
     
-    // Update connection status using slug
-    await (Client as any).updateOne(
-      { slug: clientSlug },
-      {
-        $set: {
-          'googleAnalytics.connected': isConnected,
-          'googleAnalytics.lastSync': isConnected ? new Date() : null,
-        }
+    // Update connection status using slug with Prisma
+    await prisma.client.update({
+      where: { slug: clientSlug },
+      data: {
+        googleAnalyticsConnected: isConnected,
+        googleAnalyticsLastSync: isConnected ? new Date() : null,
       }
-    );
+    });
     
     return isConnected;
   } catch (error) {
@@ -303,26 +297,29 @@ export async function testAllConnections(clientSlug: string): Promise<{
 export async function removeClientCredentials(clientSlug: string, platform?: 'googleAds' | 'facebookAds' | 'googleAnalytics'): Promise<boolean> {
   try {
     
-    const updateData: any = {};
+    const updateData: any = {
+      updatedAt: new Date(),
+    };
     
     if (!platform || platform === 'googleAds') {
-      updateData['googleAds.encryptedCredentials'] = null;
-      updateData['googleAds.connected'] = false;
+      updateData.googleAdsEncryptedCredentials = null;
+      updateData.googleAdsConnected = false;
     }
     
     if (!platform || platform === 'facebookAds') {
-      updateData['facebookAds.encryptedCredentials'] = null;
-      updateData['facebookAds.connected'] = false;
+      updateData.facebookAdsEncryptedCredentials = null;
+      updateData.facebookAdsConnected = false;
     }
     
     if (!platform || platform === 'googleAnalytics') {
-      updateData['googleAnalytics.encryptedCredentials'] = null;
-      updateData['googleAnalytics.connected'] = false;
+      updateData.googleAnalyticsEncryptedCredentials = null;
+      updateData.googleAnalyticsConnected = false;
     }
     
-    updateData.updatedAt = new Date();
-    
-    await (Client as any).updateOne({ slug: clientSlug }, { $set: updateData });
+    await prisma.client.update({
+      where: { slug: clientSlug },
+      data: updateData
+    });
     return true;
   } catch (error) {
     console.error('Erro ao remover credenciais:', error);
@@ -340,26 +337,26 @@ export async function getClientAPIStatus(clientSlug: string): Promise<{
 }> {
   try {
     
-    const client = await (Client as any).findOne({ slug: clientSlug });
+    const client = await prisma.client.findUnique({ where: { slug: clientSlug } });
     if (!client) {
       throw new Error('Cliente não encontrado');
     }
     
     return {
       googleAds: {
-        connected: client.googleAds?.connected || false,
-        customerId: client.googleAds?.customerId,
-        lastSync: client.googleAds?.lastSync,
+        connected: client.googleAdsConnected || false,
+        customerId: client.googleAdsCustomerId,
+        lastSync: client.googleAdsLastSync,
       },
       facebookAds: {
-        connected: client.facebookAds?.connected || false,
-        adAccountId: client.facebookAds?.adAccountId,
-        lastSync: client.facebookAds?.lastSync,
+        connected: client.facebookAdsConnected || false,
+        adAccountId: client.facebookAdsAccountId,
+        lastSync: client.facebookAdsLastSync,
       },
       googleAnalytics: {
-        connected: client.googleAnalytics?.connected || false,
-        propertyId: client.googleAnalytics?.propertyId,
-        lastSync: client.googleAnalytics?.lastSync,
+        connected: client.googleAnalyticsConnected || false,
+        propertyId: client.googleAnalyticsPropertyId,
+        lastSync: client.googleAnalyticsLastSync,
       },
     };
   } catch (error) {
