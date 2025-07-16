@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { connectToDatabase, Client } from '@/lib/mongodb';
+import { prisma, findClientBySlug, updateClient, deleteClient } from '@/lib/database';
 import type { APIResponse } from '@/types/dashboard';
 
 /**
@@ -13,10 +13,8 @@ export async function GET(
   try {
     const { clientId } = await params;
     
-    await connectToDatabase();
-    
-    // Buscar por slug em vez de ID
-    const client = await (Client as any).findOne({ slug: clientId });
+    // Buscar por slug usando Prisma
+    const client = await findClientBySlug(clientId);
     
     if (!client) {
       return NextResponse.json<APIResponse<null>>({
@@ -58,10 +56,8 @@ export async function PUT(
     const { clientId } = await params;
     const body = await request.json();
     
-    await connectToDatabase();
-    
     // Check if client exists by slug
-    const existingClient = await (Client as any).findOne({ slug: clientId });
+    const existingClient = await findClientBySlug(clientId);
     if (!existingClient) {
       return NextResponse.json<APIResponse<null>>({
         success: false,
@@ -71,15 +67,8 @@ export async function PUT(
       }, { status: 404 });
     }
 
-    // Update client by slug
-    const updatedClient = await (Client as any).findOneAndUpdate(
-      { slug: clientId },
-      { 
-        ...body,
-        updatedAt: new Date()
-      },
-      { new: true }
-    );
+    // Update client using Prisma
+    const updatedClient = await updateClient(existingClient.id, body);
 
     return NextResponse.json<APIResponse<any>>({
       success: true,
@@ -111,10 +100,8 @@ export async function DELETE(
   try {
     const { clientId } = await params;
     
-    await connectToDatabase();
-    
     // Check if client exists by slug
-    const existingClient = await (Client as any).findOne({ slug: clientId });
+    const existingClient = await findClientBySlug(clientId);
     if (!existingClient) {
       return NextResponse.json<APIResponse<null>>({
         success: false,
@@ -124,8 +111,8 @@ export async function DELETE(
       }, { status: 404 });
     }
 
-    // Delete client by slug
-    await (Client as any).findOneAndDelete({ slug: clientId });
+    // Delete client using Prisma
+    await deleteClient(existingClient.id);
 
     return NextResponse.json<APIResponse<null>>({
       success: true,

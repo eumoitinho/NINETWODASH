@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { connectToDatabase, Client } from '@/lib/mongodb';
+import { prisma, getAllClients, createClient } from '@/lib/database';
 import type { APIResponse } from '@/types/dashboard';
 
 /**
@@ -8,36 +8,33 @@ import type { APIResponse } from '@/types/dashboard';
  */
 export async function GET(request: NextRequest): Promise<NextResponse> {
   try {
-    await connectToDatabase();
-    
     // Get query parameters
     const { searchParams } = new URL(request.url);
     const limit = searchParams.get('limit') ? parseInt(searchParams.get('limit')!) : null;
     
-    // Get all clients with basic info
-    let query = (Client as any).find({}, {
-      name: 1,
-      email: 1,
-      slug: 1,
-      status: 1,
-      monthlyBudget: 1,
-      avatar: 1,
-      tags: 1,
-      'googleAds.connected': 1,
-      'googleAds.lastSync': 1,
-      'facebookAds.connected': 1,
-      'facebookAds.lastSync': 1,
-      'googleAnalytics.connected': 1,
-      'googleAnalytics.lastSync': 1,
-      createdAt: 1,
-      updatedAt: 1
-    }).sort({ createdAt: -1 });
-
-    if (limit) {
-      query = query.limit(limit);
-    }
-
-    const clients = await query;
+    // Get all clients using Prisma
+    const clients = await prisma.client.findMany({
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        slug: true,
+        status: true,
+        monthlyBudget: true,
+        avatar: true,
+        tags: true,
+        googleAdsConnected: true,
+        googleAdsLastSync: true,
+        facebookAdsConnected: true,
+        facebookAdsLastSync: true,
+        googleAnalyticsConnected: true,
+        googleAnalyticsLastSync: true,
+        createdAt: true,
+        updatedAt: true
+      },
+      orderBy: { createdAt: 'desc' },
+      take: limit || undefined
+    });
 
     return NextResponse.json<APIResponse<any[]>>({
       success: true,
@@ -66,8 +63,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     const body = await request.json();
     
-    await connectToDatabase();
-    
     // Validate required fields
     if (!body.name || !body.email || !body.slug || !body.monthlyBudget) {
       return NextResponse.json<APIResponse<null>>({
@@ -79,7 +74,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     }
 
     // Check if client with same slug already exists
-    const existingClient = await (Client as any).findOne({ slug: body.slug });
+    const existingClient = await prisma.client.findUnique({ 
+      where: { slug: body.slug } 
+    });
     if (existingClient) {
       return NextResponse.json<APIResponse<null>>({
         success: false,
@@ -89,37 +86,26 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       }, { status: 409 });
     }
 
-    // Create new client
-    const newClient = await (Client as any).create({
-      name: body.name,
-      email: body.email,
-      slug: body.slug,
-      status: body.status || 'active',
-      monthlyBudget: body.monthlyBudget,
-      avatar: body.avatar,
-      tags: body.tags || [],
-      portalSettings: body.portalSettings || {
-        primaryColor: '#3B82F6',
-        secondaryColor: '#8B5CF6',
-        allowedSections: ['dashboard', 'campanhas', 'analytics', 'relatorios']
-      },
-      googleAds: {
-        connected: false,
-        customerId: body.googleAds?.customerId,
-        lastSync: null,
-      },
-      facebookAds: {
-        connected: false,
-        accountId: body.facebookAds?.accountId,
-        pixelId: body.facebookAds?.pixelId,
-        lastSync: null,
-      },
-      googleAnalytics: {
-        connected: false,
-        propertyId: body.googleAnalytics?.propertyId,
-        viewId: body.googleAnalytics?.viewId,
-        lastSync: null,
-      },
+    // Create new client using Prisma
+    const newClient = await prisma.client.create({
+      data: {
+        name: body.name,
+        email: body.email,
+        slug: body.slug,
+        status: body.status || 'active',
+        monthlyBudget: body.monthlyBudget,
+        avatar: body.avatar,
+        tags: body.tags || [],
+        primaryColor: body.portalSettings?.primaryColor || '#3B82F6',
+        secondaryColor: body.portalSettings?.secondaryColor || '#8B5CF6',
+        allowedSections: body.portalSettings?.allowedSections || ['dashboard', 'campanhas', 'analytics', 'relatorios'],
+        googleAdsConnected: false,
+        googleAdsCustomerId: body.googleAds?.customerId,
+        facebookAdsConnected: false,
+        facebookAdsAccountId: body.facebookAds?.accountId,
+        googleAnalyticsConnected: false,
+        googleAnalyticsPropertyId: body.googleAnalytics?.propertyId,
+      }
     });
 
     return NextResponse.json<APIResponse<any>>({

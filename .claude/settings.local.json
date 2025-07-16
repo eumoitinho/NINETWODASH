@@ -22,7 +22,10 @@
       "Bash(true)",
       "Bash(pnpm dev:*)",
       "Bash(node:*)",
-      "Bash(pnpm install:*)"
+      "Bash(pnpm install:*)",
+      "Bash(npx prisma generate:*)",
+      "Bash(npx prisma:*)",
+      "Bash(taskkill:*)"
     ],
     "deny": []
   }

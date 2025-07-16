@@ -233,7 +233,81 @@ const AddEditClient = ({ clientSlug = null }) => {
     }
   };
 
+  const startGoogleAnalyticsOAuth = async () => {
+    try {
+      if (!clientSlug) {
+        setNotification({
+          type: 'error',
+          title: 'Erro',
+          message: 'É necessário salvar o cliente antes de autorizar o Google Analytics'
+        });
+        return;
+      }
+
+      const response = await fetch(`/api/auth/google-analytics?clientSlug=${clientSlug}`);
+      const data = await response.json();
+      
+      if (data.success && data.authUrl) {
+        // Redirecionar para autorização OAuth
+        window.location.href = data.authUrl;
+      } else {
+        setNotification({
+          type: 'error',
+          title: 'Erro',
+          message: data.message || 'Erro ao iniciar autorização OAuth'
+        });
+      }
+    } catch (error) {
+      console.error('Erro ao iniciar OAuth:', error);
+      setNotification({
+        type: 'error',
+        title: 'Erro',
+        message: 'Erro ao iniciar autorização com Google'
+      });
+    }
+  };
+
+  const startGoogleAdsOAuth = async () => {
+    try {
+      if (!clientSlug) {
+        setNotification({
+          type: 'error',
+          title: 'Erro',
+          message: 'É necessário salvar o cliente antes de autorizar o Google Ads'
+        });
+        return;
+      }
+
+      const response = await fetch(`/api/auth/google-ads?clientSlug=${clientSlug}`);
+      const data = await response.json();
+      
+      if (data.success && data.authUrl) {
+        // Redirecionar para autorização OAuth
+        window.location.href = data.authUrl;
+      } else {
+        setNotification({
+          type: 'error',
+          title: 'Erro',
+          message: data.message || 'Erro ao iniciar autorização OAuth'
+        });
+      }
+    } catch (error) {
+      console.error('Erro ao iniciar OAuth Google Ads:', error);
+      setNotification({
+        type: 'error',
+        title: 'Erro',
+        message: 'Erro ao iniciar autorização com Google Ads'
+      });
+    }
+  };
+
   const testConnection = async (platform) => {
+    if (platform === 'googleAnalytics') {
+      return startGoogleAnalyticsOAuth();
+    }
+    if (platform === 'googleAds') {
+      return startGoogleAdsOAuth();
+    }
     setIsLoading(true);
     try {
       const response = await fetch(`/api/test-connection/${platform}`, {
@@ -604,8 +678,8 @@ const AddEditClient = ({ clientSlug = null }) => {
                         onClick={() => testConnection('googleAnalytics')}
                         disabled={isLoading}
                       >
-                        <Icon icon="solar:refresh-bold" className="me-1" />
-                        {formData.googleAnalytics.connected ? 'Reconectar' : 'Testar'}
+                        <Icon icon="logos:google" className="me-1" />
+                        {formData.googleAnalytics.connected ? 'Reconectar' : 'Autorizar com Google'}
                       </button>
                     </div>
                     <div className="card-body">
@@ -703,8 +777,8 @@ const AddEditClient = ({ clientSlug = null }) => {
                         onClick={() => testConnection('googleAds')}
                         disabled={isLoading}
                       >
-                        <Icon icon="solar:refresh-bold" className="me-1" />
-                        {formData.googleAds.connected ? 'Reconectar' : 'Testar'}
+                        <Icon icon="logos:google" className="me-1" />
+                        {formData.googleAds.connected ? 'Reconectar' : 'Autorizar com Google'}
                       </button>
                     </div>
                     <div className="card-body">
