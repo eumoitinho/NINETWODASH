@@ -147,10 +147,60 @@ const ClientSchema = new mongoose.Schema({
     },
     allowedSections: {
       type: [String],
-      default: ['dashboard', 'campaigns', 'analytics', 'reports'],
+      default: ['dashboard', 'campaigns', 'analytics', 'charts', 'reports'],
     },
     customDomain: String,
   },
+  
+  // Custom Charts Configuration
+  customCharts: [{
+    id: String,
+    name: String,
+    type: {
+      type: String,
+      enum: ['line', 'bar', 'area', 'pie'],
+    },
+    metrics: [String],
+    period: {
+      type: String,
+      enum: ['7d', '30d', '90d'],
+      default: '30d',
+    },
+    groupBy: {
+      type: String,
+      enum: ['date', 'campaign', 'platform'],
+      default: 'date',
+    },
+    filters: {
+      type: mongoose.Schema.Types.Mixed,
+      default: {},
+    },
+    style: {
+      width: {
+        type: String,
+        enum: ['full', 'half', 'quarter'],
+        default: 'full',
+      },
+      height: {
+        type: String,
+        enum: ['small', 'medium', 'large'],
+        default: 'medium',
+      },
+      color: {
+        type: String,
+        enum: ['primary', 'secondary', 'success', 'warning', 'info', 'danger'],
+        default: 'primary',
+      },
+    },
+    createdAt: {
+      type: Date,
+      default: Date.now,
+    },
+    updatedAt: {
+      type: Date,
+      default: Date.now,
+    },
+  }],
   
   createdAt: {
     type: Date,

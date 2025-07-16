@@ -15,7 +15,7 @@ const ClientPortalLayout = ({ children, clientData }) => {
   const primaryColor = portalSettings.primaryColor || '#3B82F6';
   const secondaryColor = portalSettings.secondaryColor || '#8B5CF6';
   const logoUrl = portalSettings.logoUrl || '/assets/images/logo.png';
-  const allowedSections = portalSettings.allowedSections || ['dashboard', 'campanhas', 'analytics', 'relatorios'];
+  const allowedSections = portalSettings.allowedSections || ['dashboard', 'campanhas', 'analytics', 'graficos', 'relatorios'];
 
   // Menu items baseado nas seções permitidas
   const menuItems = [
@@ -36,6 +36,12 @@ const ClientPortalLayout = ({ children, clientData }) => {
       title: 'Analytics',
       icon: 'solar:chart-2-bold',
       href: `/portal/${clientData?.slug}/analytics`,
+    },
+    {
+      key: 'graficos',
+      title: 'Gráficos',
+      icon: 'solar:pie-chart-bold',
+      href: `/portal/${clientData?.slug}/charts`,
     },
     {
       key: 'relatorios',

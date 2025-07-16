@@ -90,12 +90,34 @@ export async function POST(request, { params }) {
     const newChart = {
       ...chartConfig,
       id: chartConfig.id || `chart_${Date.now()}`,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      createdAt: new Date(),
+      updatedAt: new Date()
     };
 
-    // TODO: Save to database
-    // For now, just return the chart
+    // Save chart to database
+    const Client = require('@/lib/mongodb').default?.models?.Client || require('mongoose').model('Client');
+    
+    if (chartConfig.id && clientData.customCharts.find(c => c.id === chartConfig.id)) {
+      // Update existing chart
+      await Client.updateOne(
+        { slug: client, 'customCharts.id': chartConfig.id },
+        { 
+          $set: { 
+            'customCharts.$': newChart,
+            updatedAt: new Date()
+          }
+        }
+      );
+    } else {
+      // Add new chart
+      await Client.updateOne(
+        { slug: client },
+        { 
+          $push: { customCharts: newChart },
+          $set: { updatedAt: new Date() }
+        }
+      );
+    }
     
     return NextResponse.json({
       success: true,

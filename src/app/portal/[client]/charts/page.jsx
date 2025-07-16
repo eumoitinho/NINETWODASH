@@ -15,23 +15,25 @@ const ChartsPage = ({ params }) => {
   const [error, setError] = useState(null);
   const [showBuilder, setShowBuilder] = useState(false);
   const [editingChart, setEditingChart] = useState(null);
+  const [clientSlug, setClientSlug] = useState(null);
 
   // Fetch client data and custom charts
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const clientSlug = await params.client;
+        const resolvedClientSlug = await params.client;
+        setClientSlug(resolvedClientSlug);
 
         // Fetch client data
-        const clientResponse = await fetch(`/api/clients/${clientSlug}`);
+        const clientResponse = await fetch(`/api/clients/${resolvedClientSlug}`);
         if (clientResponse.ok) {
           const clientResult = await clientResponse.json();
           setClientData(clientResult.data);
         }
 
         // Fetch custom charts
-        const chartsResponse = await fetch(`/api/charts/${clientSlug}`);
+        const chartsResponse = await fetch(`/api/charts/${resolvedClientSlug}`);
         if (chartsResponse.ok) {
           const chartsResult = await chartsResponse.json();
           setCustomCharts(chartsResult.data || []);
@@ -99,7 +101,6 @@ const ChartsPage = ({ params }) => {
 
   const handleSaveChart = async (chartConfig) => {
     try {
-      const clientSlug = await params.client;
       
       const response = await fetch(`/api/charts/${clientSlug}`, {
         method: 'POST',
@@ -155,7 +156,6 @@ const ChartsPage = ({ params }) => {
     }
 
     try {
-      const clientSlug = await params.client;
       
       const response = await fetch(`/api/charts/${clientSlug}/${chartId}`, {
         method: 'DELETE'
@@ -237,7 +237,7 @@ const ChartsPage = ({ params }) => {
         </div>
 
         <ChartBuilder
-          clientSlug={await params.client}
+          clientSlug={clientSlug}
           onSave={handleSaveChart}
           onCancel={handleCancelBuilder}
           editChart={editingChart}
@@ -396,7 +396,7 @@ const ChartsPage = ({ params }) => {
             <CustomChart
               key={chart.id}
               config={chart}
-              clientSlug={params.client}
+              clientSlug={clientSlug}
               onEdit={handleEditChart}
               onDelete={handleDeleteChart}
               onDuplicate={handleDuplicateChart}
