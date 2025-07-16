@@ -322,6 +322,7 @@ export function createFacebookAdsClient(adAccountId: string, pixelId?: string, c
     accessToken: credentials?.accessToken || process.env.FACEBOOK_ACCESS_TOKEN || '',
     adAccountId,
     pixelId,
+    version: '19.0',
   };
 
   if (!config.appId || !config.appSecret || !config.accessToken) {

@@ -129,6 +129,12 @@ export interface APIError {
 }
 
 // Cache interfaces
+export interface CacheEntry<T = any> {
+  data: T;
+  timestamp: number;
+  ttl: number;
+}
+
 export interface CacheStats {
   hits: number;
   misses: number;
@@ -213,6 +219,37 @@ export interface FacebookAdsCredentials {
   accessToken: string;
   adAccountId: string;
   pixelId?: string;
+}
+
+export interface FacebookAdsConfig {
+  appId: string;
+  appSecret: string;
+  accessToken: string;
+  adAccountId: string;
+  pixelId?: string;
+  version: string;
+}
+
+export interface FacebookAdsMetrics extends CampaignMetrics {
+  reach: number;
+  frequency: number;
+  socialSpend: number;
+  websiteClicks: number;
+}
+
+export interface GoogleAdsConfig {
+  developerId: string;
+  clientId: string;
+  clientSecret: string;
+  refreshToken: string;
+  customerId: string;
+}
+
+export interface GoogleAdsMetrics extends CampaignMetrics {
+  searchImpressionShare: number;
+  qualityScore: number;
+  avgPosition: number;
+  invalidClicks: number;
 }
 
 export interface GoogleAnalyticsCredentials {
