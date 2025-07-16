@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '../../../../../../lib/auth';
+import { authOptions } from '../../../../../lib/auth';
 import {
   saveGoogleAdsCredentials,
   saveFacebookAdsCredentials,
@@ -8,8 +8,8 @@ import {
   testAllConnections,
   getClientAPIStatus,
   removeClientCredentials,
-} from '../../../../../../lib/client-credentials';
-import type { APIResponse } from '../../../../../../types/dashboard';
+} from '../../../../../lib/client-credentials';
+import type { APIResponse } from '../../../../../types/dashboard';
 
 /**
  * GET /api/admin/clients/[id]/credentials
