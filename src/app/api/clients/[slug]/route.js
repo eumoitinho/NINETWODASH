@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
-import { connectToDatabase, findClientBySlug } from '@/lib/mongodb';
+import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { authOptions } from '@/lib/auth';
 
 export async function GET(request, { params }) {
   try {
@@ -15,11 +15,18 @@ export async function GET(request, { params }) {
 
     const { slug } = await params;
     
-    // Connect to database
-    await connectToDatabase();
-    
-    // Find client by slug
-    const client = await findClientBySlug(slug);
+    // Find client by slug using Prisma
+    const client = await prisma.client.findUnique({
+      where: { slug },
+      include: {
+        tags: {
+          include: {
+            tag: true
+          }
+        }
+      }
+    });
+
     if (!client) {
       return NextResponse.json(
         { success: false, message: 'Cliente não encontrado' },
@@ -37,24 +44,33 @@ export async function GET(request, { params }) {
 
     // Return client data (excluding sensitive information)
     const clientData = {
+      id: client.id,
       slug: client.slug,
       name: client.name,
       email: client.email,
+      phone: client.phone,
+      company: client.company,
       avatar: client.avatar,
       monthlyBudget: client.monthlyBudget,
-      tags: client.tags,
+      status: client.status,
+      tags: client.tags.map(ct => ct.tag),
       portalSettings: client.portalSettings,
       googleAds: {
-        connected: client.googleAds?.connected || false,
-        lastSync: client.googleAds?.lastSync,
+        connected: client.googleAdsConnected || false,
+        customerId: client.googleAdsCustomerId,
+        managerId: client.googleAdsManagerId,
+        lastSync: client.googleAdsLastSync,
       },
       facebookAds: {
-        connected: client.facebookAds?.connected || false,
-        lastSync: client.facebookAds?.lastSync,
+        connected: client.facebookAdsConnected || false,
+        accountId: client.facebookAdsAccountId,
+        pixelId: client.facebookPixelId,
+        lastSync: client.facebookAdsLastSync,
       },
       googleAnalytics: {
-        connected: client.googleAnalytics?.connected || false,
-        lastSync: client.googleAnalytics?.lastSync,
+        connected: client.googleAnalyticsConnected || false,
+        propertyId: client.googleAnalyticsPropertyId,
+        lastSync: client.googleAnalyticsLastSync,
       },
       createdAt: client.createdAt,
       updatedAt: client.updatedAt,

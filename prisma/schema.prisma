@@ -58,11 +58,13 @@ model Client {
   // API Connections
   googleAdsConnected      Boolean @default(false)
   googleAdsCustomerId     String?
+  googleAdsManagerId      String?
   googleAdsLastSync       DateTime?
   googleAdsCredentials    String? // encrypted
   
   facebookAdsConnected    Boolean @default(false)
   facebookAdsAccountId    String?
+  facebookPixelId         String?
   facebookAdsLastSync     DateTime?
   facebookAdsCredentials  String? // encrypted
   
