@@ -166,7 +166,7 @@ export async function GET(
 async function fetchGoogleAdsData(client: string, period: string, clientData: any) {
   try {
     // Only fetch if Google Ads is connected and has credentials
-    if (!clientData.googleAds?.connected || !clientData.googleAds?.customerId) {
+    if (!clientData.googleAdsConnected || !clientData.googleAdsCustomerId) {
       return null;
     }
 
@@ -200,7 +200,7 @@ async function fetchGoogleAdsData(client: string, period: string, clientData: an
 async function fetchFacebookAdsData(client: string, period: string, clientData: any) {
   try {
     // Only fetch if Facebook Ads is connected and has credentials
-    if (!clientData.facebookAds?.connected || !clientData.facebookAds?.accountId) {
+    if (!clientData.facebookAdsConnected || !clientData.facebookAdsAccountId) {
       return null;
     }
 
