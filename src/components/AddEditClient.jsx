@@ -94,16 +94,19 @@ const AddEditClient = ({ clientSlug = null }) => {
               customerId: client.googleAds?.customerId || '',
               managerId: client.googleAds?.managerId || '',
               connected: client.googleAds?.connected || false,
+              lastSync: client.googleAds?.lastSync || null,
             },
             facebookAds: {
               adAccountId: client.facebookAds?.adAccountId || '',
               pixelId: client.facebookAds?.pixelId || '',
               connected: client.facebookAds?.connected || false,
+              lastSync: client.facebookAds?.lastSync || null,
             },
             googleAnalytics: {
               propertyId: client.googleAnalytics?.propertyId || '',
               viewId: client.googleAnalytics?.viewId || '',
               connected: client.googleAnalytics?.connected || false,
+              lastSync: client.googleAnalytics?.lastSync || null,
             },
           });
           console.log('✅ FormData atualizado com sucesso');

@@ -18,7 +18,7 @@ if (process.env.NODE_ENV !== 'production') {
 
 // Helper functions for common database operations
 export async function findClientBySlug(slug: string) {
-  return await prisma.client.findUnique({
+  const client = await prisma.client.findUnique({
     where: {
       slug,
       status: {
@@ -30,6 +30,41 @@ export async function findClientBySlug(slug: string) {
       customCharts: true,
     }
   });
+
+  if (!client) {
+    return null;
+  }
+
+  // Transform the client data to match the expected structure
+  return {
+    ...client,
+    // Map portal settings from individual fields to nested object
+    portalSettings: {
+      primaryColor: client.primaryColor,
+      secondaryColor: client.secondaryColor,
+      allowedSections: client.allowedSections,
+      logoUrl: client.logoUrl,
+      customDomain: client.customDomain,
+    },
+    // Map API connections to nested objects
+    googleAds: {
+      customerId: client.googleAdsCustomerId,
+      managerId: client.googleAdsManagerId,
+      connected: client.googleAdsConnected,
+      lastSync: client.googleAdsLastSync,
+    },
+    facebookAds: {
+      adAccountId: client.facebookAdsAccountId,
+      pixelId: client.facebookPixelId,
+      connected: client.facebookAdsConnected,
+      lastSync: client.facebookAdsLastSync,
+    },
+    googleAnalytics: {
+      propertyId: client.googleAnalyticsPropertyId,
+      connected: client.googleAnalyticsConnected,
+      lastSync: client.googleAnalyticsLastSync,
+    },
+  };
 }
 
 export async function findUserByEmail(email: string) {
@@ -270,16 +305,21 @@ export async function updateClient(id: string, data: any) {
   if (data.googleAds) {
     if (data.googleAds.connected !== undefined) validData.googleAdsConnected = data.googleAds.connected;
     if (data.googleAds.customerId !== undefined) validData.googleAdsCustomerId = data.googleAds.customerId;
+    if (data.googleAds.managerId !== undefined) validData.googleAdsManagerId = data.googleAds.managerId;
+    if (data.googleAds.lastSync !== undefined) validData.googleAdsLastSync = data.googleAds.lastSync;
   }
   
   if (data.facebookAds) {
     if (data.facebookAds.connected !== undefined) validData.facebookAdsConnected = data.facebookAds.connected;
     if (data.facebookAds.adAccountId !== undefined) validData.facebookAdsAccountId = data.facebookAds.adAccountId;
+    if (data.facebookAds.pixelId !== undefined) validData.facebookPixelId = data.facebookAds.pixelId;
+    if (data.facebookAds.lastSync !== undefined) validData.facebookAdsLastSync = data.facebookAds.lastSync;
   }
   
   if (data.googleAnalytics) {
     if (data.googleAnalytics.connected !== undefined) validData.googleAnalyticsConnected = data.googleAnalytics.connected;
     if (data.googleAnalytics.propertyId !== undefined) validData.googleAnalyticsPropertyId = data.googleAnalytics.propertyId;
+    if (data.googleAnalytics.lastSync !== undefined) validData.googleAnalyticsLastSync = data.googleAnalytics.lastSync;
   }
   
   // Always update the timestamp

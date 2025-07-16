@@ -29,7 +29,21 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         success: false,
         error: 'Credenciais do Meta não configuradas',
-        details: 'Configure FACEBOOK_* no .env.local'
+        details: 'Configure FACEBOOK_APP_ID, FACEBOOK_APP_SECRET e FACEBOOK_ACCESS_TOKEN no .env.local',
+        missingCredentials: {
+          appId: !appId,
+          appSecret: !appSecret,
+          accessToken: !accessToken
+        }
+      }, { status: 500 });
+    }
+
+    // Verificar formato do access token
+    if (accessToken.length < 50) {
+      return NextResponse.json({
+        success: false,
+        error: 'Facebook Access Token inválido',
+        details: 'O token deve ser um Long-lived Access Token válido. Verifique se o token foi gerado corretamente.'
       }, { status: 500 });
     }
 
@@ -38,6 +52,7 @@ export async function POST(request: NextRequest) {
       // Testar conexão com Meta Marketing API
       const testUrl = `https://graph.facebook.com/v18.0/me?access_token=${accessToken}`;
       
+      console.log('Testing Facebook API connection...');
       const response = await fetch(testUrl, {
         method: 'GET',
         headers: {
@@ -46,14 +61,24 @@ export async function POST(request: NextRequest) {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(`Meta API Error: ${errorData.error?.message || 'Conexão falhou'}`);
+        const errorData = await response.json().catch(() => ({ error: { message: 'Unknown error' } }));
+        console.error('Facebook API Error:', errorData);
+        
+        return NextResponse.json({
+          success: false,
+          error: `Facebook API Error (${response.status})`,
+          details: errorData.error?.message || errorData.message || 'Falha na autenticação',
+          statusCode: response.status,
+          suggestion: response.status === 401 ? 'Verifique se o Access Token está válido e não expirou' : 'Verifique as credenciais da API'
+        }, { status: 500 });
       }
 
       const userData = await response.json();
+      console.log('Facebook user data:', userData);
 
       // Testar acesso às campanhas da conta específica
       const campaignsUrl = `https://graph.facebook.com/v18.0/act_${adAccountId}/campaigns?fields=id,name,status&limit=1&access_token=${accessToken}`;
+      console.log(`Testing campaigns access for account: ${adAccountId}`);
       const campaignsResponse = await fetch(campaignsUrl);
       
       let campaignData = null;
@@ -61,12 +86,17 @@ export async function POST(request: NextRequest) {
         const campaignsData = await campaignsResponse.json();
         campaignData = {
           success: true,
-          campaignCount: campaignsData.data?.length || 0
+          campaignCount: campaignsData.data?.length || 0,
+          campaigns: campaignsData.data || []
         };
+        console.log('Campaigns data:', campaignData);
       } else {
+        const errorData = await campaignsResponse.json().catch(() => ({ error: { message: 'Unknown error' } }));
+        console.error('Campaigns error:', errorData);
         campaignData = {
           success: false,
-          error: 'Não foi possível acessar campanhas'
+          error: `Erro ${campaignsResponse.status}: ${errorData.error?.message || 'Não foi possível acessar campanhas'}`,
+          suggestion: campaignsResponse.status === 403 ? 'Verifique se o Ad Account ID está correto e se você tem permissão para acessá-lo' : 'Verifique o Ad Account ID'
         };
       }
 
@@ -77,17 +107,20 @@ export async function POST(request: NextRequest) {
           adAccountId,
           user: {
             id: userData.id,
-            name: userData.name
+            name: userData.name || 'N/A'
           },
-          campaignTest: campaignData
+          campaignTest: campaignData,
+          apiVersion: 'v18.0'
         },
         timestamp: new Date().toISOString()
       });
     } catch (error: any) {
+      console.error('Facebook connection error:', error);
       return NextResponse.json({
         success: false,
         error: 'Erro ao conectar com Meta',
-        details: error.message
+        details: error.message,
+        suggestion: 'Verifique se o Access Token é válido e não expirou. Para gerar um novo token, acesse: https://developers.facebook.com/tools/explorer/'
       }, { status: 500 });
     }
 
