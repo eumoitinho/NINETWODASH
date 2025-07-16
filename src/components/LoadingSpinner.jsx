@@ -11,7 +11,7 @@ const LoadingSpinner = ({ size = 'md', text = 'Carregando...' }) => {
   return (
     <div className="d-flex justify-content-center align-items-center" style={{ height: '400px' }}>
       <div className="text-center">
-        <div className={`spinner-border text-primary ${sizeClasses[size]}`} role="status">
+        <div className={`spinner-border ${sizeClasses[size]}`} style={{color: '#D00054'}} role="status">
           <span className="visually-hidden">{text}</span>
         </div>
         {text && (

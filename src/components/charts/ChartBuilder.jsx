@@ -200,7 +200,7 @@ const ChartBuilder = ({ clientSlug, onSave, onCancel, editChart = null }) => {
     if (loading) {
       return (
         <div className="d-flex justify-content-center align-items-center" style={{ height: '300px' }}>
-          <div className="spinner-border text-primary"></div>
+          <div className="spinner-border" style={{color: '#D00054'}}></div>
         </div>
       );
     }

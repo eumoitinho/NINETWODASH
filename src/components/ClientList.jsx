@@ -72,7 +72,7 @@ const ClientList = () => {
         <div className="col-12">
           <div className="card">
             <div className="card-body text-center">
-              <div className="spinner-border text-primary" role="status">
+              <div className="spinner-border" style={{color: '#D00054'}} role="status">
                 <span className="visually-hidden">Carregando...</span>
               </div>
               <p className="mt-3">Carregando clientes...</p>
