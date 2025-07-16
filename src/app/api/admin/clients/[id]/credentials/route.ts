@@ -22,7 +22,7 @@ export async function GET(
   try {
     const session = await getServerSession(authOptions);
     
-    if (!session || session.user.role !== 'admin') {
+    if (!session || (session.user as any).role !== 'admin') {
       return NextResponse.json<APIResponse<null>>({
         success: false,
         error: 'UNAUTHORIZED',
@@ -63,7 +63,7 @@ export async function POST(
   try {
     const session = await getServerSession(authOptions);
     
-    if (!session || session.user.role !== 'admin') {
+    if (!session || (session.user as any).role !== 'admin') {
       return NextResponse.json<APIResponse<null>>({
         success: false,
         error: 'UNAUTHORIZED',
@@ -145,7 +145,7 @@ export async function DELETE(
   try {
     const session = await getServerSession(authOptions);
     
-    if (!session || session.user.role !== 'admin') {
+    if (!session || (session.user as any).role !== 'admin') {
       return NextResponse.json<APIResponse<null>>({
         success: false,
         error: 'UNAUTHORIZED',
