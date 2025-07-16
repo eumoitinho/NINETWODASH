@@ -355,7 +355,7 @@ const BudgetManager = () => {
                                 <Icon icon="solar:pen-bold" />
                               </button>
                               <button
-                                className="btn btn-sm btn-outline-secondary"
+                                className="btn btn-sm btn-outline-primary"
                                 title="Ver Detalhes"
                               >
                                 <Icon icon="solar:eye-bold" />

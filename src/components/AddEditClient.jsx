@@ -507,7 +507,7 @@ const AddEditClient = ({ clientSlug = null }) => {
             <div className="modal-footer">
               <button 
                 type="button" 
-                className="btn btn-secondary" 
+                className="btn btn-outline-primary" 
                 onClick={() => setShowHelpModal(false)}
               >
                 Fechar
@@ -543,7 +543,7 @@ const AddEditClient = ({ clientSlug = null }) => {
             </h5>
             <button
               type="button"
-              className="btn btn-outline-info"
+              className="btn btn-outline-primary"
               onClick={() => setShowHelpModal(true)}
             >
               <Icon icon="solar:question-circle-bold" className="me-2" />
@@ -666,7 +666,7 @@ const AddEditClient = ({ clientSlug = null }) => {
                         <Icon icon="logos:google-analytics" className="me-2" />
                         <span>Google Analytics 4</span>
                         {formData.googleAnalytics.connected && (
-                          <span className="badge bg-success ms-2">
+                          <span className="badge bg-primary ms-2">
                             <Icon icon="solar:check-circle-bold" className="me-1" />
                             Conectado
                           </span>
@@ -674,7 +674,7 @@ const AddEditClient = ({ clientSlug = null }) => {
                       </div>
                       <button
                         type="button"
-                        className={`btn btn-sm ${formData.googleAnalytics.connected ? 'btn-outline-success' : 'btn-outline-primary'}`}
+                        className={`btn btn-sm ${formData.googleAnalytics.connected ? 'btn-outline-primary' : 'btn-outline-primary'}`}
                         onClick={() => testConnection('googleAnalytics')}
                         disabled={isLoading}
                       >
@@ -710,7 +710,7 @@ const AddEditClient = ({ clientSlug = null }) => {
                         <Icon icon="logos:facebook" className="me-2" />
                         <span>Meta Ads</span>
                         {formData.facebookAds.connected && (
-                          <span className="badge bg-success ms-2">
+                          <span className="badge bg-primary ms-2">
                             <Icon icon="solar:check-circle-bold" className="me-1" />
                             Conectado
                           </span>
@@ -718,7 +718,7 @@ const AddEditClient = ({ clientSlug = null }) => {
                       </div>
                       <button
                         type="button"
-                        className={`btn btn-sm ${formData.facebookAds.connected ? 'btn-outline-success' : 'btn-outline-primary'}`}
+                        className={`btn btn-sm ${formData.facebookAds.connected ? 'btn-outline-primary' : 'btn-outline-primary'}`}
                         onClick={() => testConnection('facebookAds')}
                         disabled={isLoading}
                       >
@@ -765,7 +765,7 @@ const AddEditClient = ({ clientSlug = null }) => {
                         <Icon icon="logos:google-ads" className="me-2" />
                         <span>Google Ads</span>
                         {formData.googleAds.connected && (
-                          <span className="badge bg-success ms-2">
+                          <span className="badge bg-primary ms-2">
                             <Icon icon="solar:check-circle-bold" className="me-1" />
                             Conectado
                           </span>
@@ -773,7 +773,7 @@ const AddEditClient = ({ clientSlug = null }) => {
                       </div>
                       <button
                         type="button"
-                        className={`btn btn-sm ${formData.googleAds.connected ? 'btn-outline-success' : 'btn-outline-primary'}`}
+                        className={`btn btn-sm ${formData.googleAds.connected ? 'btn-outline-primary' : 'btn-outline-primary'}`}
                         onClick={() => testConnection('googleAds')}
                         disabled={isLoading}
                       >
@@ -851,7 +851,7 @@ const AddEditClient = ({ clientSlug = null }) => {
                     </button>
                     <button
                       type="button"
-                      className="btn btn-outline-secondary"
+                      className="btn btn-outline-primary"
                       onClick={() => window.history.back()}
                     >
                       Cancelar

@@ -327,14 +327,14 @@ const ClientTagsManager = () => {
                     </div>
                     <div className="btn-group btn-group-sm">
                       <button
-                        className="btn btn-outline-secondary btn-sm"
+                        className="btn btn-outline-primary btn-sm"
                         onClick={() => handleEditTag(tag)}
                         title="Editar"
                       >
                         <Icon icon="solar:pen-bold" />
                       </button>
                       <button
-                        className="btn btn-outline-danger btn-sm"
+                        className="btn btn-outline-primary btn-sm"
                         onClick={() => handleDeleteTag(tag.id)}
                         title="Excluir"
                       >
@@ -388,7 +388,7 @@ const ClientTagsManager = () => {
                     <div className="modal-footer">
                       <button
                         type="button"
-                        className="btn btn-secondary"
+                        className="btn btn-outline-primary"
                         onClick={() => setEditingTag(null)}
                       >
                         Cancelar
@@ -481,7 +481,7 @@ const ClientTagsManager = () => {
                         <td>
                           <div className="dropdown">
                             <button
-                              className="btn btn-sm btn-outline-secondary dropdown-toggle"
+                              className="btn btn-sm btn-outline-primary dropdown-toggle"
                               type="button"
                               data-bs-toggle="dropdown"
                             >

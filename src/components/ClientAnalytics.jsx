@@ -175,7 +175,7 @@ const ClientAnalytics = ({ clientSlug }) => {
                   <option value="30d">Últimos 30 dias</option>
                   <option value="90d">Últimos 90 dias</option>
                 </select>
-                <Link href={`/edit-client/${clientSlug}`} className="btn btn-outline-secondary">
+                <Link href={`/edit-client/${clientSlug}`} className="btn btn-outline-primary">
                   <Icon icon="solar:pen-bold" className="me-2" />
                   Editar
                 </Link>

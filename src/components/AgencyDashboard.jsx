@@ -75,7 +75,7 @@ const AgencyDashboard = () => {
         <div className="col-12">
           <div className="card">
             <div className="card-body text-center">
-              <Icon icon="solar:close-circle-bold" className="text-danger text-4xl mb-3" />
+              <Icon icon="solar:close-circle-bold" className="text-primary text-4xl mb-3" />
               <h5>Erro ao carregar dashboard</h5>
               <p className="text-muted">{error}</p>
               <button 
@@ -117,8 +117,8 @@ const AgencyDashboard = () => {
           <div className="card-body">
             <div className="d-flex align-items-center">
               <div className="flex-shrink-0">
-                <div className="w-48-px h-48-px bg-success-subtle rounded-circle d-flex align-items-center justify-content-center">
-                  <Icon icon="solar:check-circle-bold" className="text-success text-xl" />
+                <div className="w-48-px h-48-px bg-primary-subtle rounded-circle d-flex align-items-center justify-content-center">
+                  <Icon icon="solar:check-circle-bold" className="text-primary text-xl" />
                 </div>
               </div>
               <div className="flex-grow-1 ms-3">
@@ -135,8 +135,8 @@ const AgencyDashboard = () => {
           <div className="card-body">
             <div className="d-flex align-items-center">
               <div className="flex-shrink-0">
-                <div className="w-48-px h-48-px bg-warning-subtle rounded-circle d-flex align-items-center justify-content-center">
-                  <Icon icon="solar:money-bag-bold" className="text-warning text-xl" />
+                <div className="w-48-px h-48-px bg-primary-subtle rounded-circle d-flex align-items-center justify-content-center">
+                  <Icon icon="solar:money-bag-bold" className="text-primary text-xl" />
                 </div>
               </div>
               <div className="flex-grow-1 ms-3">
@@ -153,8 +153,8 @@ const AgencyDashboard = () => {
           <div className="card-body">
             <div className="d-flex align-items-center">
               <div className="flex-shrink-0">
-                <div className="w-48-px h-48-px bg-info-subtle rounded-circle d-flex align-items-center justify-content-center">
-                  <Icon icon="solar:chart-2-bold" className="text-info text-xl" />
+                <div className="w-48-px h-48-px bg-primary-subtle rounded-circle d-flex align-items-center justify-content-center">
+                  <Icon icon="solar:chart-2-bold" className="text-primary text-xl" />
                 </div>
               </div>
               <div className="flex-grow-1 ms-3">
@@ -224,7 +224,7 @@ const AgencyDashboard = () => {
                           </div>
                         </td>
                         <td>
-                          <span className={`badge ${client.status === 'active' ? 'bg-success-subtle text-success-main' : 'bg-warning-subtle text-warning-main'}`}>
+                          <span className={`badge ${client.status === 'active' ? 'bg-primary-subtle text-primary' : 'bg-primary-subtle text-primary-700'}`}>
                             {client.status === 'active' ? 'Ativo' : 'Pendente'}
                           </span>
                         </td>
@@ -234,7 +234,7 @@ const AgencyDashboard = () => {
                               {formatDate(client.googleAnalytics?.lastSync || client.facebookAds?.lastSync)}
                             </span>
                           ) : (
-                            <span className="text-warning">Não sincronizado</span>
+                            <span className="text-primary-700">Não sincronizado</span>
                           )}
                         </td>
                         <td>
@@ -253,7 +253,7 @@ const AgencyDashboard = () => {
                             </Link>
                             <Link
                               href={`/edit-client/${client.slug}`}
-                              className="btn btn-sm btn-outline-secondary"
+                              className="btn btn-sm btn-outline-primary"
                               title="Editar"
                             >
                               <Icon icon="solar:pen-bold" />
@@ -291,13 +291,13 @@ const AgencyDashboard = () => {
                 </Link>
               </div>
               <div className="col-md-3 mb-3">
-                <button className="btn btn-outline-success w-100">
+                <button className="btn btn-outline-primary w-100">
                   <Icon icon="solar:refresh-bold" className="me-2" />
                   Sincronizar Todos
                 </button>
               </div>
               <div className="col-md-3 mb-3">
-                <button className="btn btn-outline-info w-100">
+                <button className="btn btn-outline-primary w-100">
                   <Icon icon="solar:chart-2-bold" className="me-2" />
                   Relatório Geral
                 </button>

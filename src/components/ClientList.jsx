@@ -33,9 +33,9 @@ const ClientList = () => {
 
   const getStatusBadge = (status) => {
     const statusClasses = {
-      active: "bg-success-subtle text-success-main",
-      pending: "bg-warning-subtle text-warning-main",
-      inactive: "bg-danger-subtle text-danger-main"
+      active: "bg-primary-subtle text-primary",
+      pending: "bg-primary-subtle text-primary-700",
+      inactive: "bg-primary-subtle text-primary-900"
     };
     return (
       <span className={`badge ${statusClasses[status] || statusClasses.inactive}`}>
@@ -46,9 +46,9 @@ const ClientList = () => {
 
   const getConnectionStatus = (connected) => {
     return connected ? (
-      <Icon icon="solar:check-circle-bold" className="text-success-main text-xl" />
+      <Icon icon="solar:check-circle-bold" className="text-primary text-xl" />
     ) : (
-      <Icon icon="solar:close-circle-bold" className="text-danger-main text-xl" />
+      <Icon icon="solar:close-circle-bold" className="text-primary-700 text-xl" />
     );
   };
 
@@ -89,7 +89,7 @@ const ClientList = () => {
         <div className="col-12">
           <div className="card">
             <div className="card-body text-center">
-              <Icon icon="solar:close-circle-bold" className="text-danger text-4xl mb-3" />
+              <Icon icon="solar:close-circle-bold" className="text-primary text-4xl mb-3" />
               <h5>Erro ao carregar clientes</h5>
               <p className="text-muted">{error}</p>
               <button 
@@ -114,11 +114,11 @@ const ClientList = () => {
               Gestão de Clientes ({clients.length})
             </h5>
             <div className="d-flex gap-2">
-              <Link href="/client-tags" className="btn btn-outline-warning">
+              <Link href="/client-tags" className="btn btn-outline-primary">
                 <Icon icon="solar:tag-price-bold" className="me-2" />
                 Gerenciar Tags
               </Link>
-              <Link href="/budgets" className="btn btn-outline-info">
+              <Link href="/budgets" className="btn btn-outline-primary">
                 <Icon icon="solar:money-bag-bold" className="me-2" />
                 Orçamentos
               </Link>
@@ -189,7 +189,7 @@ const ClientList = () => {
                               {formatDate(client.googleAnalytics?.lastSync || client.facebookAds?.lastSync)}
                             </span>
                           ) : (
-                            <span className="text-warning">Não sincronizado</span>
+                            <span className="text-primary-700">Não sincronizado</span>
                           )}
                         </td>
                         <td>
@@ -208,13 +208,13 @@ const ClientList = () => {
                             </Link>
                             <Link
                               href={`/edit-client/${client.slug}`}
-                              className="btn btn-sm btn-outline-secondary"
+                              className="btn btn-sm btn-outline-primary"
                               title="Editar"
                             >
                               <Icon icon="solar:pen-bold" />
                             </Link>
                             <button
-                              className="btn btn-sm btn-outline-danger"
+                              className="btn btn-sm btn-outline-primary"
                               title="Remover"
                               onClick={() => {
                                 if (confirm(`Tem certeza que deseja remover ${client.name}?`)) {
