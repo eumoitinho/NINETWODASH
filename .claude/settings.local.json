@@ -21,7 +21,8 @@
       "Bash(pkill:*)",
       "Bash(true)",
       "Bash(pnpm dev:*)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(pnpm install:*)"
     ],
     "deny": []
   }
