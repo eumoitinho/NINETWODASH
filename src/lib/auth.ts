@@ -3,10 +3,12 @@
  * Handles authentication for admin users and client portal access
  */
 
-export const authOptions = {
+import { type AuthOptions } from 'next-auth';
+
+export const authOptions: AuthOptions = {
   providers: [],
   session: {
-    strategy: 'jwt',
+    strategy: 'jwt' as const,
     maxAge: 24 * 60 * 60, // 24 hours
   },
   callbacks: {
