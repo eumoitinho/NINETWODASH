@@ -63,13 +63,17 @@ export async function GET(
 
     // Convert Prisma client to Client type
     const clientConfig: Client = {
-      id: clientData.id,
+      id: Number(clientData.id),
       name: clientData.name,
       email: clientData.email,
       status: clientData.status,
       ga4Connected: clientData.googleAnalyticsConnected || false,
       metaConnected: clientData.facebookAdsConnected || false,
-      lastSync: clientData.updatedAt || new Date().toISOString(),
+      lastSync: typeof clientData.updatedAt === 'string'
+        ? clientData.updatedAt
+        : clientData.updatedAt instanceof Date
+          ? clientData.updatedAt.toISOString()
+          : new Date().toISOString(),
       monthlyBudget: clientData.monthlyBudget,
       avatar: clientData.avatar,
       tags: clientData.tags,
