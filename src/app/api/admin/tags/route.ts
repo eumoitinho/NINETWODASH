@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { connectToDatabase, Client } from '@/lib/mongodb';
+import { Client } from '@/lib/database';
 import type { APIResponse } from '@/types/dashboard';
 
 /**
@@ -8,7 +8,6 @@ import type { APIResponse } from '@/types/dashboard';
  */
 export async function GET(request: NextRequest): Promise<NextResponse> {
   try {
-    await connectToDatabase();
     
     // Get all clients to extract unique tags
     const clients = await (Client as any).find({});

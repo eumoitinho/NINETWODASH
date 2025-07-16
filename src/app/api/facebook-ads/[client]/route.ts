@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createFacebookAdsClient, getFacebookDateRange } from '@/lib/facebook-ads';
 import { withCache, generateCacheKey } from '@/lib/cache';
-import { connectToDatabase, Client } from '@/lib/mongodb';
+import { Client } from '@/lib/database';
 import type { APIResponse, CampaignMetrics, Campaign } from '@/types/dashboard';
 
 /**
@@ -22,7 +22,6 @@ export async function GET(
     const useCache = searchParams.get('cache') !== 'false';
 
     // Connect to database and get client configuration
-    await connectToDatabase();
     const clientData = await (Client as any).findOne({ slug: client });
     
     if (!clientData) {
@@ -130,7 +129,6 @@ export async function POST(
     const { client } = await params;
     
     // Connect to database and get client configuration
-    await connectToDatabase();
     const clientData = await (Client as any).findOne({ slug: client });
     
     if (!clientData) {

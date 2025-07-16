@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { connectToDatabase, findClientBySlug } from '@/lib/mongodb';
+import { findClientBySlug } from '@/lib/database';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 
@@ -16,7 +16,6 @@ export async function GET(request, { params }) {
     const { client } = await params;
     
     // Connect to database
-    await connectToDatabase();
     
     // Find client by slug
     const clientData = await findClientBySlug(client);
@@ -36,7 +35,7 @@ export async function GET(request, { params }) {
     }
 
     // Get reports from database
-    const Report = require('@/lib/mongodb').default?.models?.Report || require('mongoose').model('Report');
+    const Report = require('@/lib/database').default?.models?.Report || require('mongoose').model('Report');
     
     const reports = await Report.find({ 
       clientId: clientData._id 
@@ -71,7 +70,6 @@ export async function POST(request, { params }) {
     const { type, period } = await request.json();
     
     // Connect to database
-    await connectToDatabase();
     
     // Find client by slug
     const clientData = await findClientBySlug(client);

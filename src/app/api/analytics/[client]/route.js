@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { connectToDatabase, findClientBySlug } from '@/lib/mongodb';
+import { findClientBySlug } from '@/lib/database';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 
@@ -18,7 +18,6 @@ export async function GET(request, { params }) {
     const period = searchParams.get('period') || '30d';
     
     // Connect to database
-    await connectToDatabase();
     
     // Find client by slug
     const clientData = await findClientBySlug(client);

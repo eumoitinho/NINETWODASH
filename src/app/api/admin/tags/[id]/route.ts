@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { connectToDatabase, Client } from '@/lib/mongodb';
+import { Client } from '@/lib/database';
 import type { APIResponse } from '@/types/dashboard';
 
 /**
@@ -24,7 +24,6 @@ export async function PUT(
     }
 
     // Update tag in all clients that use it
-    await connectToDatabase();
     
     const clients = await (Client as any).find({ tags: { $in: [body.name] } });
     
@@ -76,7 +75,6 @@ export async function DELETE(
   try {
     const { id } = await params;
     
-    await connectToDatabase();
     
     // Remove tag from all clients that use it
     const clients = await (Client as any).find({ tags: { $in: [id.replace('tag-', '')] } });

@@ -3,7 +3,7 @@
  * Creates initial admin user and sample client data
  */
 
-import { connectToDatabase, User, Client } from '../lib/mongodb';
+import { User, Client } from '../lib/mongodb';
 import { hashPassword } from '../lib/auth';
 import { testEncryption, generateEncryptionKey } from '../lib/encryption';
 
@@ -270,7 +270,6 @@ async function initializeDatabase() {
     console.log('✅ Criptografia funcionando corretamente');
     
     // Connect to database
-    await connectToDatabase();
     console.log('✅ Conectado ao MongoDB');
     
     // Create admin user if doesn't exist
@@ -372,7 +371,6 @@ async function createIndexes() {
   try {
     console.log('📈 Criando índices do banco de dados...');
     
-    await connectToDatabase();
     
     // User indexes
     await User.collection.createIndex({ email: 1 }, { unique: true });

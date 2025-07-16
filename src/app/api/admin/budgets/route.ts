@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { connectToDatabase, Client } from '@/lib/mongodb';
+import { Client } from '@/lib/database';
 import type { APIResponse } from '@/types/dashboard';
 
 /**
@@ -11,7 +11,6 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     const { searchParams } = new URL(request.url);
     const period = searchParams.get('period') || 'current';
     
-    await connectToDatabase();
     
     // Get all clients to create budget data
     const clients = await (Client as any).find({});
@@ -69,7 +68,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     const body = await request.json();
     
-    await connectToDatabase();
     
     // Validate required fields
     if (!body.clientId || !body.period || !body.budget) {

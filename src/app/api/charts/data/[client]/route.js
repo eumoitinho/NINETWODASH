@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { connectToDatabase, findClientBySlug } from '@/lib/mongodb';
+import { findClientBySlug } from '@/lib/database';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 
@@ -17,7 +17,6 @@ export async function POST(request, { params }) {
     const { metrics, period, groupBy, filters } = await request.json();
     
     // Connect to database
-    await connectToDatabase();
     
     // Find client by slug
     const clientData = await findClientBySlug(client);

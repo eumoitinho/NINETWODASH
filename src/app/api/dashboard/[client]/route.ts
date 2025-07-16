@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { withCache, generateCacheKey } from '@/lib/cache';
-import { connectToDatabase, findClientBySlug, findRecentCampaigns } from '@/lib/mongodb';
+import { findClientBySlug, findRecentCampaigns } from '@/lib/database';
 import { getServerSession } from 'next-auth';
 import type { 
   APIResponse, 
@@ -10,7 +10,7 @@ import type {
   Client,
   DashboardSummary 
 } from '@/types/dashboard';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { authOptions } from '@/lib/auth';
 
 /**
  * GET /api/dashboard/[client]
@@ -38,9 +38,6 @@ export async function GET(
     const period = (searchParams.get('period') as '7d' | '30d' | '90d') || '30d';
     const useCache = searchParams.get('cache') !== 'false';
 
-    // Connect to database
-    await connectToDatabase();
-
     // Validate client exists
     const clientData = await findClientBySlug(client);
     if (!clientData) {
@@ -64,20 +61,20 @@ export async function GET(
       }, { status: 403 });
     }
 
-    // Convert MongoDB client to Client type
+    // Convert Prisma client to Client type
     const clientConfig: Client = {
-      id: clientData._id.toString(),
+      id: clientData.id,
       name: clientData.name,
       email: clientData.email,
       status: clientData.status,
-      ga4Connected: clientData.googleAnalytics?.connected || false,
-      metaConnected: clientData.facebookAds?.connected || false,
+      ga4Connected: clientData.googleAnalyticsConnected || false,
+      metaConnected: clientData.facebookAdsConnected || false,
       lastSync: clientData.updatedAt || new Date().toISOString(),
       monthlyBudget: clientData.monthlyBudget,
       avatar: clientData.avatar,
       tags: clientData.tags,
-      googleAdsCustomerId: clientData.googleAds?.customerId,
-      facebookAdAccountId: clientData.facebookAds?.accountId,
+      googleAdsCustomerId: clientData.googleAdsCustomerId,
+      facebookAdAccountId: clientData.facebookAdsAccountId,
     };
 
 
@@ -97,8 +94,8 @@ export async function GET(
       
       // Fetch data from APIs if credentials are configured
       const [googleAdsData, facebookAdsData] = await Promise.allSettled([
-        clientData.googleAds?.connected ? fetchGoogleAdsData(client, period, clientData) : Promise.resolve(null),
-        clientData.facebookAds?.connected ? fetchFacebookAdsData(client, period, clientData) : Promise.resolve(null),
+        clientData.googleAdsConnected ? fetchGoogleAdsData(client, period, clientData) : Promise.resolve(null),
+        clientData.facebookAdsConnected ? fetchFacebookAdsData(client, period, clientData) : Promise.resolve(null),
       ]);
 
       // Process API results
@@ -169,7 +166,7 @@ export async function GET(
 async function fetchGoogleAdsData(client: string, period: string, clientData: any) {
   try {
     // Only fetch if Google Ads is connected and has credentials
-    if (!clientData.googleAds?.connected || !clientData.googleAds?.customerId) {
+    if (!clientData.googleAdsConnected || !clientData.googleAdsCustomerId) {
       return null;
     }
 
@@ -203,7 +200,7 @@ async function fetchGoogleAdsData(client: string, period: string, clientData: an
 async function fetchFacebookAdsData(client: string, period: string, clientData: any) {
   try {
     // Only fetch if Facebook Ads is connected and has credentials
-    if (!clientData.facebookAds?.connected || !clientData.facebookAds?.accountId) {
+    if (!clientData.facebookAdsConnected || !clientData.facebookAdsAccountId) {
       return null;
     }
 

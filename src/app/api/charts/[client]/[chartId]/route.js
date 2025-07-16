@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { connectToDatabase, findClientBySlug } from '@/lib/mongodb';
+import { findClientBySlug } from '@/lib/database';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 
@@ -16,7 +16,6 @@ export async function DELETE(request, { params }) {
     const { client, chartId } = await params;
     
     // Connect to database
-    await connectToDatabase();
     
     // Find client by slug
     const clientData = await findClientBySlug(client);
@@ -36,7 +35,7 @@ export async function DELETE(request, { params }) {
     }
 
     // Delete chart from database
-    const Client = require('@/lib/mongodb').default?.models?.Client || require('mongoose').model('Client');
+    const Client = require('@/lib/database').default?.models?.Client || require('mongoose').model('Client');
     
     const result = await Client.updateOne(
       { slug: client },

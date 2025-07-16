@@ -3,7 +3,7 @@
  * Handles secure storage and retrieval of API credentials for each client
  */
 
-import { connectToDatabase, Client } from './mongodb';
+import { Client } from './mongodb';
 import { encryptCredentials, decryptCredentials } from './encryption';
 
 // Types for credentials
@@ -39,7 +39,6 @@ export async function saveGoogleAdsCredentials(
   credentials: GoogleAdsCredentials
 ): Promise<boolean> {
   try {
-    await connectToDatabase();
     
     // Encrypt credentials
     const encryptedCredentials = encryptCredentials(credentials);
@@ -72,7 +71,6 @@ export async function saveFacebookAdsCredentials(
   credentials: FacebookAdsCredentials
 ): Promise<boolean> {
   try {
-    await connectToDatabase();
     
     // Encrypt credentials
     const encryptedCredentials = encryptCredentials(credentials);
@@ -106,7 +104,6 @@ export async function saveGoogleAnalyticsCredentials(
   credentials: GoogleAnalyticsCredentials
 ): Promise<boolean> {
   try {
-    await connectToDatabase();
     
     // Encrypt credentials
     const encryptedCredentials = encryptCredentials(credentials);
@@ -137,7 +134,6 @@ export async function saveGoogleAnalyticsCredentials(
  */
 export async function getGoogleAdsCredentials(clientSlug: string): Promise<GoogleAdsCredentials | null> {
   try {
-    await connectToDatabase();
     
     const client = await (Client as any).findOne({ slug: clientSlug });
     if (!client?.googleAds?.encryptedCredentials) {
@@ -157,7 +153,6 @@ export async function getGoogleAdsCredentials(clientSlug: string): Promise<Googl
  */
 export async function getFacebookAdsCredentials(clientSlug: string): Promise<FacebookAdsCredentials | null> {
   try {
-    await connectToDatabase();
     
     const client = await (Client as any).findOne({ slug: clientSlug });
     if (!client?.facebookAds?.encryptedCredentials) {
@@ -177,7 +172,6 @@ export async function getFacebookAdsCredentials(clientSlug: string): Promise<Fac
  */
 export async function getGoogleAnalyticsCredentials(clientSlug: string): Promise<GoogleAnalyticsCredentials | null> {
   try {
-    await connectToDatabase();
     
     const client = await (Client as any).findOne({ slug: clientSlug });
     if (!client?.googleAnalytics?.encryptedCredentials) {
@@ -314,7 +308,6 @@ export async function testAllConnections(clientSlug: string): Promise<{
  */
 export async function removeClientCredentials(clientSlug: string, platform?: 'googleAds' | 'facebookAds' | 'googleAnalytics'): Promise<boolean> {
   try {
-    await connectToDatabase();
     
     const updateData: any = {};
     
@@ -352,7 +345,6 @@ export async function getClientAPIStatus(clientSlug: string): Promise<{
   googleAnalytics: { connected: boolean; propertyId?: string; lastSync?: Date };
 }> {
   try {
-    await connectToDatabase();
     
     const client = await (Client as any).findOne({ slug: clientSlug });
     if (!client) {
