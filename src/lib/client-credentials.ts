@@ -3,7 +3,7 @@
  * Handles secure storage and retrieval of API credentials for each client
  */
 
-import { Client } from './mongodb';
+import { prisma } from './database';
 import { encryptCredentials, decryptCredentials } from './encryption';
 
 // Types for credentials
@@ -43,18 +43,16 @@ export async function saveGoogleAdsCredentials(
     // Encrypt credentials
     const encryptedCredentials = encryptCredentials(credentials);
     
-    // Update client using slug
-    await (Client as any).updateOne(
-      { slug: clientSlug },
-      {
-        $set: {
-          'googleAds.customerId': credentials.customerId,
-          'googleAds.encryptedCredentials': encryptedCredentials,
-          'googleAds.connected': false, // Will be tested separately
-          updatedAt: new Date(),
-        }
+    // Update client using slug with Prisma
+    await prisma.client.update({
+      where: { slug: clientSlug },
+      data: {
+        googleAdsCustomerId: credentials.customerId,
+        googleAdsEncryptedCredentials: encryptedCredentials,
+        googleAdsConnected: false, // Will be tested separately
+        updatedAt: new Date(),
       }
-    );
+    });
     
     return true;
   } catch (error) {
@@ -75,19 +73,17 @@ export async function saveFacebookAdsCredentials(
     // Encrypt credentials
     const encryptedCredentials = encryptCredentials(credentials);
     
-    // Update client using slug
-    await (Client as any).updateOne(
-      { slug: clientSlug },
-      {
-        $set: {
-          'facebookAds.adAccountId': credentials.adAccountId,
-          'facebookAds.pixelId': credentials.pixelId,
-          'facebookAds.encryptedCredentials': encryptedCredentials,
-          'facebookAds.connected': false, // Will be tested separately
-          updatedAt: new Date(),
-        }
+    // Update client using slug with Prisma
+    await prisma.client.update({
+      where: { slug: clientSlug },
+      data: {
+        facebookAdsAccountId: credentials.adAccountId,
+        facebookPixelId: credentials.pixelId,
+        facebookAdsEncryptedCredentials: encryptedCredentials,
+        facebookAdsConnected: false, // Will be tested separately
+        updatedAt: new Date(),
       }
-    );
+    });
     
     return true;
   } catch (error) {
@@ -108,19 +104,17 @@ export async function saveGoogleAnalyticsCredentials(
     // Encrypt credentials
     const encryptedCredentials = encryptCredentials(credentials);
     
-    // Update client using slug
-    await (Client as any).updateOne(
-      { slug: clientSlug },
-      {
-        $set: {
-          'googleAnalytics.propertyId': credentials.propertyId,
-          'googleAnalytics.viewId': credentials.viewId,
-          'googleAnalytics.encryptedCredentials': encryptedCredentials,
-          'googleAnalytics.connected': false, // Will be tested separately
-          updatedAt: new Date(),
-        }
+    // Update client using slug with Prisma
+    await prisma.client.update({
+      where: { slug: clientSlug },
+      data: {
+        googleAnalyticsPropertyId: credentials.propertyId,
+        googleAnalyticsViewId: credentials.viewId,
+        googleAnalyticsEncryptedCredentials: encryptedCredentials,
+        googleAnalyticsConnected: false, // Will be tested separately
+        updatedAt: new Date(),
       }
-    );
+    });
     
     return true;
   } catch (error) {
