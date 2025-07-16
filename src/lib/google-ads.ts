@@ -212,18 +212,18 @@ export class GoogleAdsClient {
    * Transform Google Ads metrics to standard format
    */
   private transformMetrics(metrics: GoogleAdsMetrics): CampaignMetrics {
-    const impressions = parseInt(metrics.impressions) || 0;
-    const clicks = parseInt(metrics.clicks) || 0;
-    const cost = parseInt(metrics.cost_micros) / 1000000 || 0; // Convert micros to currency
-    const conversions = parseFloat(metrics.conversions) || 0;
+    const impressions = Number(metrics.impressions) || 0;
+    const clicks = Number(metrics.clicks) || 0;
+    const cost = Number((metrics as any).cost_micros) / 1000000 || 0; // Convert micros to currency
+    const conversions = Number(metrics.conversions) || 0;
 
     return {
       impressions,
       clicks,
       cost,
       conversions,
-      ctr: parseFloat(metrics.ctr || '0'),
-      cpc: parseFloat(metrics.average_cpc || '0') / 1000000, // Convert micros
+      ctr: Number((metrics as any).ctr || 0),
+      cpc: Number((metrics as any).average_cpc || 0) / 1000000, // Convert micros
       cpm: impressions > 0 ? (cost / impressions) * 1000 : 0,
       conversionRate: clicks > 0 ? (conversions / clicks) * 100 : 0,
       roas: cost > 0 && conversions > 0 ? conversions / cost : 0,
