@@ -275,7 +275,7 @@ async function initializeDatabase() {
     
     // Create admin user if doesn't exist
     console.log('👤 Verificando usuário administrador...');
-    const existingAdmin = await User.findOne({ role: 'admin' });
+    const existingAdmin = await (User as any).findOne({ role: 'admin' });
     
     if (!existingAdmin) {
       const adminPassword = await hashPassword('admin123');
@@ -300,7 +300,7 @@ async function initializeDatabase() {
     console.log('🏢 Criando clientes de exemplo...');
     
     for (const clientData of SAMPLE_CLIENTS) {
-      const existingClient = await Client.findOne({ slug: clientData.slug });
+      const existingClient = await (Client as any).findOne({ slug: clientData.slug });
       
       if (!existingClient) {
         const client = new Client({
