@@ -227,15 +227,21 @@ const DashboardsList = () => {
                     {/* Status de Conexão */}
                     <div className="mb-3">
                       <div className="row text-center">
-                        <div className="col-6">
+                        <div className="col-4">
                           <div className="d-flex align-items-center justify-content-center mb-1">
-                            {getConnectionStatus(client.googleAnalytics?.connected)}
+                            {getConnectionStatus(client.googleAnalyticsConnected)}
                           </div>
-                          <small className="text-muted">Google Analytics</small>
+                          <small className="text-muted">Analytics</small>
                         </div>
-                        <div className="col-6">
+                        <div className="col-4">
                           <div className="d-flex align-items-center justify-content-center mb-1">
-                            {getConnectionStatus(client.facebookAds?.connected)}
+                            {getConnectionStatus(client.googleAdsConnected)}
+                          </div>
+                          <small className="text-muted">Google Ads</small>
+                        </div>
+                        <div className="col-4">
+                          <div className="d-flex align-items-center justify-content-center mb-1">
+                            {getConnectionStatus(client.facebookAdsConnected)}
                           </div>
                           <small className="text-muted">Meta Ads</small>
                         </div>
@@ -253,7 +259,7 @@ const DashboardsList = () => {
                         </div>
                         <div className="col-6">
                           <h6 className="mb-1 text-success">
-                            {formatDate(client.googleAnalytics?.lastSync || client.facebookAds?.lastSync)}
+                            {formatDate(client.googleAnalyticsLastSync || client.googleAdsLastSync || client.facebookAdsLastSync)}
                           </h6>
                           <small className="text-muted">Última Sincronização</small>
                         </div>

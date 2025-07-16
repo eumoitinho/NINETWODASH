@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { prisma } from '@/lib/database';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 
@@ -19,11 +19,8 @@ export async function GET(request, { params }) {
     const client = await prisma.client.findUnique({
       where: { slug },
       include: {
-        tags: {
-          include: {
-            tag: true
-          }
-        }
+        users: true,
+        customCharts: true,
       }
     });
 
@@ -53,8 +50,14 @@ export async function GET(request, { params }) {
       avatar: client.avatar,
       monthlyBudget: client.monthlyBudget,
       status: client.status,
-      tags: client.tags.map(ct => ct.tag),
-      portalSettings: client.portalSettings,
+      tags: client.tags || [],
+      portalSettings: {
+        primaryColor: client.primaryColor,
+        secondaryColor: client.secondaryColor,
+        allowedSections: client.allowedSections,
+        logoUrl: client.logoUrl,
+        customDomain: client.customDomain,
+      },
       googleAds: {
         connected: client.googleAdsConnected || false,
         customerId: client.googleAdsCustomerId,
@@ -63,7 +66,7 @@ export async function GET(request, { params }) {
       },
       facebookAds: {
         connected: client.facebookAdsConnected || false,
-        accountId: client.facebookAdsAccountId,
+        adAccountId: client.facebookAdsAccountId,
         pixelId: client.facebookPixelId,
         lastSync: client.facebookAdsLastSync,
       },

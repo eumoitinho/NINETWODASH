@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { prisma, findClientBySlug } from '@/lib/database';
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ clientId: string }> }) {
   try {
@@ -13,56 +14,52 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       );
     }
 
-    // Para desenvolvimento, simular sucesso
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`✅ Conexão ${platform} salva para cliente ${clientId}:`, {
-        connected,
-        lastSync,
-        connectionData
-      });
-
-      return NextResponse.json({
-        success: true,
-        message: `Status de conexão ${platform} atualizado com sucesso`,
-        data: {
-          clientId,
-          platform,
-          connected,
-          lastSync,
-          connectionData
-        }
-      });
-    }
-
-    // TODO: Implementar salvamento real no banco de dados
-    // Exemplo com MongoDB:
-    /*
-    const { connectToDatabase, Client } = await import('@/lib/mongodb');
-    await connectToDatabase();
+    // Buscar cliente por slug
+    const client = await findClientBySlug(clientId);
     
-    const updateData = {
-      [`${platform}.connected`]: connected,
-      [`${platform}.lastSync`]: lastSync,
-      [`${platform}.connectionData`]: connectionData
-    };
-
-    const updatedClient = await Client.findByIdAndUpdate(
-      clientId,
-      { $set: updateData },
-      { new: true }
-    );
-
-    if (!updatedClient) {
+    if (!client) {
       return NextResponse.json(
         { success: false, message: 'Cliente não encontrado' },
         { status: 404 }
       );
     }
-    */
+
+    // Preparar dados para atualização baseado na plataforma
+    const updateData: any = {};
+    
+    if (platform === 'googleAnalytics') {
+      updateData.googleAnalyticsConnected = connected;
+      if (lastSync) updateData.googleAnalyticsLastSync = new Date(lastSync);
+    } else if (platform === 'googleAds') {
+      updateData.googleAdsConnected = connected;
+      if (lastSync) updateData.googleAdsLastSync = new Date(lastSync);
+    } else if (platform === 'facebookAds') {
+      updateData.facebookAdsConnected = connected;
+      if (lastSync) updateData.facebookAdsLastSync = new Date(lastSync);
+    }
+    
+    // Atualizar cliente no banco
+    const updatedClient = await prisma.client.update({
+      where: { id: client.id },
+      data: updateData
+    });
+
+    console.log(`✅ Conexão ${platform} salva para cliente ${clientId}:`, {
+      connected,
+      lastSync,
+      connectionData
+    });
 
     return NextResponse.json({
       success: true,
-      message: `Status de conexão ${platform} atualizado com sucesso`
+      message: `Status de conexão ${platform} atualizado com sucesso`,
+      data: {
+        clientId,
+        platform,
+        connected,
+        lastSync,
+        connectionData
+      }
     });
 
   } catch (error) {
