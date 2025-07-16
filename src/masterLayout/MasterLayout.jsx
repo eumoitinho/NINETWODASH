@@ -1899,9 +1899,6 @@ const MasterLayout = ({ children }) => {
         <footer className='d-footer'>
           <div className='row align-items-center justify-content-between'>
             <div className='col-auto'>
-              <p className='mb-0'>© 2025 WowDash. All Rights Reserved.</p>
-            </div>
-            <div className='col-auto'>
               <div className='d-flex gap-3'>
                 <Link href='/terms' className='text-secondary-light text-decoration-none'>
                   Termos de Uso
@@ -1909,9 +1906,7 @@ const MasterLayout = ({ children }) => {
                 <Link href='/privacy' className='text-secondary-light text-decoration-none'>
                   Privacidade
                 </Link>
-                <p className='mb-0'>
-                  Made by <span className='text-primary-600'>wowtheme7</span>
-                </p>
+
               </div>
             </div>
           </div>
