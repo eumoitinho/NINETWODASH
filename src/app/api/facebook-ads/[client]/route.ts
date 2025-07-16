@@ -44,16 +44,6 @@ export async function GET(
       }, { status: 400 });
     }
 
-    // Check if mock data is enabled
-    const useMockData = process.env.USE_MOCK_DATA === 'true';
-    if (useMockData) {
-      return NextResponse.json<APIResponse<any>>({
-        success: true,
-        data: getMockData(client, type, period),
-        message: 'Mock data returned (USE_MOCK_DATA=true)',
-        timestamp: new Date().toISOString(),
-      });
-    }
 
     // Validate API configuration
     if (!process.env.FACEBOOK_APP_ID || 
@@ -201,80 +191,3 @@ export async function POST(
   }
 }
 
-/**
- * Generate mock data for development
- */
-function getMockData(client: string, type: string, period: '7d' | '30d' | '90d') {
-  const baseMetrics = {
-    impressions: 12000,
-    clicks: 380,
-    cost: 1800,
-    conversions: 28,
-    ctr: 3.17,
-    cpc: 4.74,
-    cpm: 150.00,
-    conversionRate: 7.37,
-    roas: 1.56,
-  };
-
-  if (type === 'campaigns') {
-    return [
-      {
-        campaignId: 'facebook_campaign_1',
-        campaignName: `${client} - Facebook Feed Campaign`,
-        platform: 'facebook',
-        status: 'active',
-        date: new Date().toISOString().split('T')[0],
-        metrics: { ...baseMetrics, impressions: 7000, clicks: 220, cost: 1100 },
-      },
-      {
-        campaignId: 'facebook_campaign_2',
-        campaignName: `${client} - Instagram Stories Campaign`,
-        platform: 'facebook',
-        status: 'active',
-        date: new Date().toISOString().split('T')[0],
-        metrics: { ...baseMetrics, impressions: 5000, clicks: 160, cost: 700 },
-      },
-    ];
-  }
-
-  if (type === 'insights') {
-    return [
-      {
-        device_platform: 'mobile',
-        ...baseMetrics,
-        impressions: 8000,
-        clicks: 250,
-        cost: 1200,
-      },
-      {
-        device_platform: 'desktop',
-        ...baseMetrics,
-        impressions: 4000,
-        clicks: 130,
-        cost: 600,
-      },
-    ];
-  }
-
-  if (type === 'creatives') {
-    return [
-      {
-        id: 'creative_1',
-        name: `${client} - Creative A`,
-        insights: {
-          data: [{ ...baseMetrics, impressions: 6000, clicks: 190, cost: 900 }]
-        }
-      },
-      {
-        id: 'creative_2',
-        name: `${client} - Creative B`,
-        insights: {
-          data: [{ ...baseMetrics, impressions: 6000, clicks: 190, cost: 900 }]
-        }
-      },
-    ];
-  }
-
-  return baseMetrics;
-}

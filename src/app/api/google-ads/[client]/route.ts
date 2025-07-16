@@ -44,16 +44,6 @@ export async function GET(
       }, { status: 400 });
     }
 
-    // Check if mock data is enabled
-    const useMockData = process.env.USE_MOCK_DATA === 'true';
-    if (useMockData) {
-      return NextResponse.json<APIResponse<any>>({
-        success: true,
-        data: getMockData(client, type, period),
-        message: 'Mock data returned (USE_MOCK_DATA=true)',
-        timestamp: new Date().toISOString(),
-      });
-    }
 
     // Validate API configuration
     if (!process.env.GOOGLE_ADS_DEVELOPER_TOKEN || 
@@ -188,42 +178,3 @@ export async function POST(
   }
 }
 
-/**
- * Generate mock data for development
- */
-function getMockData(client: string, type: string, period: '7d' | '30d' | '90d') {
-  const baseMetrics = {
-    impressions: 15000,
-    clicks: 450,
-    cost: 2500,
-    conversions: 35,
-    ctr: 3.0,
-    cpc: 5.56,
-    cpm: 166.67,
-    conversionRate: 7.78,
-    roas: 1.4,
-  };
-
-  if (type === 'campaigns') {
-    return [
-      {
-        campaignId: 'google_ads_campaign_1',
-        campaignName: `${client} - Search Campaign`,
-        platform: 'google_ads',
-        status: 'active',
-        date: new Date().toISOString().split('T')[0],
-        metrics: { ...baseMetrics, impressions: 9000, clicks: 270, cost: 1500 },
-      },
-      {
-        campaignId: 'google_ads_campaign_2',
-        campaignName: `${client} - Display Campaign`,
-        platform: 'google_ads',
-        status: 'active',
-        date: new Date().toISOString().split('T')[0],
-        metrics: { ...baseMetrics, impressions: 6000, clicks: 180, cost: 1000 },
-      },
-    ];
-  }
-
-  return baseMetrics;
-}

@@ -37,12 +37,12 @@ const CampanhasPage = ({ params }) => {
           const campaignsResult = await campaignsResponse.json();
           setCampaigns(campaignsResult.data || []);
         } else {
-          // Use mock campaigns if API fails
-          setCampaigns(getMockCampaigns(clientSlug));
+          setError('Erro ao carregar campanhas');
+          setCampaigns([]);
         }
       } catch (err) {
         setError(err.message);
-        setCampaigns(getMockCampaigns(await params.client));
+        setCampaigns([]);
       } finally {
         setLoading(false);
       }
@@ -51,76 +51,6 @@ const CampanhasPage = ({ params }) => {
     fetchData();
   }, [params.client, filter.period, filter.platform, filter.status]);
 
-  const getMockCampaigns = (clientSlug) => {
-    return [
-      {
-        campaignId: 'google_search_001',
-        campaignName: 'Campanha de Busca - Palavras-chave Principais',
-        platform: 'google_ads',
-        status: 'active',
-        budget: 1500,
-        dailyBudget: 50,
-        startDate: '2024-01-15',
-        endDate: null,
-        metrics: {
-          impressions: 8500,
-          clicks: 127,
-          cost: 1847.50,
-          conversions: 15,
-          ctr: 1.49,
-          cpc: 14.55,
-          cpm: 217.35,
-          conversionRate: 11.81,
-          roas: 2.1
-        },
-        lastUpdated: new Date().toISOString()
-      },
-      {
-        campaignId: 'facebook_feed_001',
-        campaignName: 'Facebook Feed - Público Interessado',
-        platform: 'facebook',
-        status: 'active',
-        budget: 1000,
-        dailyBudget: 33.33,
-        startDate: '2024-02-01',
-        endDate: null,
-        metrics: {
-          impressions: 12400,
-          clicks: 89,
-          cost: 856.20,
-          conversions: 8,
-          ctr: 0.72,
-          cpc: 9.62,
-          cpm: 69.05,
-          conversionRate: 8.99,
-          roas: 1.8
-        },
-        lastUpdated: new Date().toISOString()
-      },
-      {
-        campaignId: 'google_display_001',
-        campaignName: 'Display - Remarketing',
-        platform: 'google_ads',
-        status: 'paused',
-        budget: 800,
-        dailyBudget: 26.67,
-        startDate: '2024-01-20',
-        endDate: '2024-03-20',
-        metrics: {
-          impressions: 45600,
-          clicks: 152,
-          cost: 435.80,
-          conversions: 4,
-          ctr: 0.33,
-          cpc: 2.87,
-          cpm: 9.56,
-          conversionRate: 2.63,
-          roas: 1.2
-        },
-        lastUpdated: new Date().toISOString()
-      }
-    ];
-  };
 
   const handleFilterChange = (filterType, value) => {
     setFilter(prev => ({

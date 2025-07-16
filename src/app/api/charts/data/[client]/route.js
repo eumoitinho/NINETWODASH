@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { connectToDatabase, findClientBySlug } from '@/lib/mongodb';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { authOptions } from '@/lib/auth';
 
 export async function POST(request, { params }) {
   try {
@@ -54,56 +54,13 @@ export async function POST(request, { params }) {
 }
 
 async function generateChartData(clientData, metrics, period, groupBy, filters) {
-  // Calculate date range
-  const days = period === '7d' ? 7 : period === '30d' ? 30 : 90;
-  const data = [];
+  // TODO: Fetch real data from campaigns and analytics collections
+  // For now, return error indicating real data should be implemented
   
-  // Base values for different metrics (simulated)
-  const metricBase = {
-    impressions: { base: 1000, variance: 500 },
-    clicks: { base: 50, variance: 25 },
-    cost: { base: 500, variance: 200 },
-    conversions: { base: 10, variance: 5 },
-    ctr: { base: 2.0, variance: 1.0 },
-    cpc: { base: 15, variance: 8 },
-    cpm: { base: 25, variance: 10 },
-    sessions: { base: 800, variance: 300 },
-    users: { base: 600, variance: 200 },
-    pageviews: { base: 1500, variance: 600 },
-    bounceRate: { base: 45, variance: 15 },
-    roas: { base: 2.5, variance: 1.0 }
-  };
-
-  for (let i = days - 1; i >= 0; i--) {
-    const date = new Date();
-    date.setDate(date.getDate() - i);
-    
-    const entry = {
-      date: date.toISOString().split('T')[0],
-      formattedDate: date.toLocaleDateString('pt-BR', { 
-        month: 'short', 
-        day: 'numeric' 
-      })
-    };
-
-    // Generate realistic data for each metric
-    metrics.forEach(metricId => {
-      const config = metricBase[metricId];
-      if (config) {
-        // Add some trending and seasonality
-        const trend = (days - i) * 0.01; // Small upward trend
-        const seasonality = Math.sin((i / 7) * Math.PI * 2) * 0.1; // Weekly pattern
-        const random = (Math.random() - 0.5) * 0.3; // Random variation
-        
-        const multiplier = 1 + trend + seasonality + random;
-        const value = Math.max(0, config.base + (Math.random() - 0.5) * config.variance * multiplier);
-        
-        entry[metricId] = Math.round(value * 100) / 100; // Round to 2 decimals
-      }
-    });
-
-    data.push(entry);
-  }
-
-  return data;
+  throw new Error(`Chart data generation not yet implemented for real database data. 
+    This function should:
+    1. Query campaigns from database for the specified period
+    2. Aggregate metrics based on groupBy parameter
+    3. Apply any filters
+    4. Return time-series data for the requested metrics: ${metrics.join(', ')}`);
 }

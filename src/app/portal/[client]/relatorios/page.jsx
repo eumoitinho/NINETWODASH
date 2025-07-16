@@ -34,12 +34,12 @@ const RelatoriosPage = ({ params }) => {
           const reportsResult = await reportsResponse.json();
           setReports(reportsResult.data || []);
         } else {
-          // Use mock reports if API fails
-          setReports(getMockReports());
+          setError('Erro ao carregar relatórios');
+          setReports([]);
         }
       } catch (err) {
         setError(err.message);
-        setReports(getMockReports());
+        setReports([]);
       } finally {
         setLoading(false);
       }
@@ -48,67 +48,6 @@ const RelatoriosPage = ({ params }) => {
     fetchData();
   }, [params.client]);
 
-  const getMockReports = () => {
-    return [
-      {
-        id: 'report-monthly-001',
-        name: 'Relatório Mensal - Março 2024',
-        type: 'monthly',
-        period: { start: '2024-03-01', end: '2024-03-31' },
-        status: 'ready',
-        createdAt: '2024-04-01T00:00:00Z',
-        summary: {
-          totalInvestment: 8950.75,
-          totalLeads: 42,
-          totalConversions: 18,
-          averageCPC: 12.45,
-          averageCTR: 1.82,
-          roas: 2.1
-        }
-      },
-      {
-        id: 'report-weekly-001',
-        name: 'Relatório Semanal - Semana 14',
-        type: 'weekly',
-        period: { start: '2024-04-01', end: '2024-04-07' },
-        status: 'ready',
-        createdAt: '2024-04-08T00:00:00Z',
-        summary: {
-          totalInvestment: 2240.30,
-          totalLeads: 12,
-          totalConversions: 5,
-          averageCPC: 14.80,
-          averageCTR: 1.65,
-          roas: 1.8
-        }
-      },
-      {
-        id: 'report-campaign-001',
-        name: 'Relatório de Campanha - Lançamento Produto',
-        type: 'campaign',
-        period: { start: '2024-03-15', end: '2024-04-15' },
-        status: 'ready',
-        createdAt: '2024-04-16T00:00:00Z',
-        summary: {
-          totalInvestment: 5680.90,
-          totalLeads: 28,
-          totalConversions: 14,
-          averageCPC: 11.20,
-          averageCTR: 2.10,
-          roas: 2.4
-        }
-      },
-      {
-        id: 'report-custom-001',
-        name: 'Análise Personalizada - ROI por Plataforma',
-        type: 'custom',
-        period: { start: '2024-01-01', end: '2024-03-31' },
-        status: 'processing',
-        createdAt: '2024-04-15T00:00:00Z',
-        summary: null
-      }
-    ];
-  };
 
   const generateReport = async (reportType, period) => {
     try {

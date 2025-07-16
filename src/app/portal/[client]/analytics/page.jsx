@@ -33,12 +33,12 @@ const AnalyticsPage = ({ params }) => {
           const analyticsResult = await analyticsResponse.json();
           setAnalyticsData(analyticsResult.data);
         } else {
-          // Use mock analytics if API fails
-          setAnalyticsData(getMockAnalytics());
+          setError('Erro ao carregar dados de analytics');
+          setAnalyticsData(null);
         }
       } catch (err) {
         setError(err.message);
-        setAnalyticsData(getMockAnalytics());
+        setAnalyticsData(null);
       } finally {
         setLoading(false);
       }
@@ -47,58 +47,6 @@ const AnalyticsPage = ({ params }) => {
     fetchData();
   }, [params.client, period]);
 
-  const getMockAnalytics = () => {
-    return {
-      overview: {
-        sessions: 4820,
-        users: 3567,
-        pageviews: 12845,
-        bounceRate: 58.3,
-        avgSessionDuration: 185, // seconds
-        conversions: 42,
-        conversionRate: 1.18,
-        revenue: 8950.75
-      },
-      topPages: [
-        { page: '/produtos/categoria-a', views: 2340, users: 1890, avgTime: 145 },
-        { page: '/landing-page-campanha', views: 1876, users: 1654, avgTime: 220 },
-        { page: '/sobre-nos', views: 1234, users: 1001, avgTime: 95 },
-        { page: '/contato', views: 987, users: 856, avgTime: 78 },
-        { page: '/servicos', views: 745, users: 634, avgTime: 165 }
-      ],
-      trafficSources: [
-        { source: 'Google Ads', sessions: 1820, percentage: 37.8 },
-        { source: 'Facebook Ads', sessions: 1156, percentage: 24.0 },
-        { source: 'Busca Orgânica', sessions: 965, percentage: 20.0 },
-        { source: 'Direto', sessions: 578, percentage: 12.0 },
-        { source: 'Referência', sessions: 301, percentage: 6.2 }
-      ],
-      demographics: {
-        age: [
-          { range: '18-24', percentage: 15.2 },
-          { range: '25-34', percentage: 32.8 },
-          { range: '35-44', percentage: 28.5 },
-          { range: '45-54', percentage: 16.1 },
-          { range: '55+', percentage: 7.4 }
-        ],
-        gender: [
-          { gender: 'Feminino', percentage: 54.3 },
-          { gender: 'Masculino', percentage: 45.7 }
-        ]
-      },
-      devices: [
-        { device: 'Mobile', sessions: 2652, percentage: 55.0 },
-        { device: 'Desktop', sessions: 1735, percentage: 36.0 },
-        { device: 'Tablet', sessions: 433, percentage: 9.0 }
-      ],
-      goals: [
-        { name: 'Formulário de Contato', completions: 28, value: 150.0 },
-        { name: 'Newsletter Signup', completions: 67, value: 25.0 },
-        { name: 'Download Material', completions: 45, value: 50.0 },
-        { name: 'Compra Online', completions: 12, value: 245.0 }
-      ]
-    };
-  };
 
   const formatNumber = (value) => {
     return new Intl.NumberFormat('pt-BR').format(value);

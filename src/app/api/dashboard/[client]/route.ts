@@ -80,16 +80,6 @@ export async function GET(
       facebookAdAccountId: clientData.facebookAds?.accountId,
     };
 
-    // Check if mock data is enabled
-    const useMockData = process.env.USE_MOCK_DATA === 'true';
-    if (useMockData) {
-      return NextResponse.json<APIResponse<ClientDashboardData>>({
-        success: true,
-        data: getMockDashboardData(clientConfig, period),
-        message: 'Mock data returned (USE_MOCK_DATA=true)',
-        timestamp: new Date().toISOString(),
-      });
-    }
 
     // Generate cache key
     const cacheKey = generateCacheKey('client', client, { 
@@ -310,83 +300,3 @@ function getDateRange(period: '7d' | '30d' | '90d') {
   };
 }
 
-/**
- * Generate mock dashboard data for development
- */
-function getMockDashboardData(client: Client, period: '7d' | '30d' | '90d'): ClientDashboardData {
-  const dateRange = getDateRange(period);
-  
-  // Mock metrics based on Catalisti Holding reference data
-  const summary: DashboardSummary = {
-    totalImpressions: 14923,
-    totalClicks: 138,
-    totalCost: 1996.65,
-    totalConversions: 18,
-    averageCTR: 0.92,
-    averageCPC: 14.47,
-    averageCPM: 133.80,
-    averageConversionRate: 13.04,
-    totalROAS: 1.35,
-    impressions: 14923,
-    clicks: 138,
-    cost: 1996.65,
-    conversions: 18,
-    ctr: 0.92,
-    cpc: 14.47,
-    cpm: 133.80,
-    conversionRate: 13.04,
-    roas: 1.35,
-  };
-
-  const campaigns: Campaign[] = [
-    {
-      campaignId: 'google_search_campaign',
-      campaignName: `${client.name} - Search Campaign`,
-      platform: 'google_ads',
-      status: 'active',
-      date: dateRange.to,
-      metrics: {
-        impressions: 8500,
-        clicks: 85,
-        cost: 1200,
-        conversions: 12,
-        ctr: 1.0,
-        cpc: 14.12,
-        cpm: 141.18,
-        conversionRate: 14.12,
-        roas: 1.4,
-      },
-    },
-    {
-      campaignId: 'facebook_feed_campaign',
-      campaignName: `${client.name} - Facebook Feed`,
-      platform: 'facebook',
-      status: 'active',
-      date: dateRange.to,
-      metrics: {
-        impressions: 6423,
-        clicks: 53,
-        cost: 796.65,
-        conversions: 6,
-        ctr: 0.83,
-        cpc: 15.03,
-        cpm: 124.05,
-        conversionRate: 11.32,
-        roas: 1.25,
-      },
-    },
-  ];
-
-  return {
-    client,
-    dateRange,
-    summary,
-    campaigns,
-    lastUpdated: new Date().toISOString(),
-    dataSource: {
-      googleAds: false,
-      facebookAds: false,
-      mock: true,
-    },
-  };
-}

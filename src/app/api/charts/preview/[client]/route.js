@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { connectToDatabase, findClientBySlug } from '@/lib/mongodb';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { authOptions } from '@/lib/auth';
 
 export async function POST(request, { params }) {
   try {
@@ -54,50 +54,9 @@ export async function POST(request, { params }) {
 }
 
 async function generatePreviewData(clientData, metrics, period, groupBy, filters) {
-  // For preview, limit to last 15 days max
-  const days = Math.min(period === '7d' ? 7 : period === '30d' ? 15 : 15, 15);
-  const data = [];
+  // TODO: Fetch real preview data from database
+  // This should return a smaller subset of the same data as generateChartData
   
-  // Base values for different metrics (simulated with some variation for preview)
-  const metricBase = {
-    impressions: { base: 850, variance: 400 },
-    clicks: { base: 45, variance: 20 },
-    cost: { base: 420, variance: 180 },
-    conversions: { base: 8, variance: 4 },
-    ctr: { base: 1.8, variance: 0.8 },
-    cpc: { base: 12, variance: 6 },
-    cpm: { base: 22, variance: 8 },
-    sessions: { base: 680, variance: 250 },
-    users: { base: 510, variance: 180 },
-    pageviews: { base: 1200, variance: 500 },
-    bounceRate: { base: 42, variance: 12 },
-    roas: { base: 2.2, variance: 0.8 }
-  };
-
-  for (let i = days - 1; i >= 0; i--) {
-    const date = new Date();
-    date.setDate(date.getDate() - i);
-    
-    const entry = {
-      date: date.toISOString().split('T')[0],
-      formattedDate: date.toLocaleDateString('pt-BR', { 
-        month: 'short', 
-        day: 'numeric' 
-      })
-    };
-
-    // Generate realistic preview data
-    metrics.forEach(metricId => {
-      const config = metricBase[metricId];
-      if (config) {
-        // Slight variation for preview
-        const value = Math.max(0, config.base + (Math.random() - 0.5) * config.variance);
-        entry[metricId] = Math.round(value * 100) / 100;
-      }
-    });
-
-    data.push(entry);
-  }
-
-  return data;
+  throw new Error(`Chart preview data generation not yet implemented for real database data. 
+    This function should return a limited sample of real data for the metrics: ${metrics.join(', ')}`);
 }
