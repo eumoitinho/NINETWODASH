@@ -301,27 +301,14 @@ const ClientCharts = ({ clientSlug, period, dashboardData, onPeriodChange }) => 
   // Processar dados de dispersão (Custo x Conversões)
   const processScatterPlotData = () => {
     if (!dashboardData?.campaigns || dashboardData.campaigns.length === 0) {
-      // Dados mock para exemplo
       return [
         {
           name: 'Google Ads',
-          data: [
-            { x: 1500, y: 25 },
-            { x: 2300, y: 35 },
-            { x: 1800, y: 28 },
-            { x: 2700, y: 42 },
-            { x: 1200, y: 18 }
-          ]
+          data: [{ x: 0, y: 0 }]
         },
         {
           name: 'Meta Ads',
-          data: [
-            { x: 1100, y: 22 },
-            { x: 1900, y: 31 },
-            { x: 1600, y: 26 },
-            { x: 2200, y: 38 },
-            { x: 1400, y: 24 }
-          ]
+          data: [{ x: 0, y: 0 }]
         }
       ];
     }
