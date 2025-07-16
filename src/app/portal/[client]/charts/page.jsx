@@ -20,14 +20,12 @@ const ChartsPage = () => {
   const [error, setError] = useState(null);
   const [showBuilder, setShowBuilder] = useState(false);
   const [editingChart, setEditingChart] = useState(null);
-  const [clientSlug, setClientSlug] = useState(null);
 
   // Fetch client data and custom charts
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        setClientSlug(clientSlug);
 
         // Fetch client data
         const clientResponse = await fetch(`/api/clients/${clientSlug}`);
