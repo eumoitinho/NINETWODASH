@@ -9,7 +9,8 @@
       "Bash(timeout 10 npm run dev)",
       "Bash(mv:*)",
       "Bash(rm:*)",
-      "Bash(npm run init-db:*)"
+      "Bash(npm run init-db:*)",
+      "Bash(npm run dev:*)"
     ],
     "deny": []
   }

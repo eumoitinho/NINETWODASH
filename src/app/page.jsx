@@ -5,10 +5,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { Icon } from "@iconify/react/dist/iconify.js";
 
-export const metadata = {
-  title: "NINETWODASH - Dashboard de Marketing Digital",
-  description: "Dashboard completo para acompanhar métricas de Google Ads, Facebook Ads e Google Analytics em tempo real.",
-};
+
 
 const Page = () => {
   const { data: session, status } = useSession();
