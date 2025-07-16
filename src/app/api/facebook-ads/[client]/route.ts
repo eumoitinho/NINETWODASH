@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createFacebookAdsClient, getFacebookDateRange } from '@/lib/facebook-ads';
 import { withCache, generateCacheKey } from '@/lib/cache';
-import { Client } from '@/lib/database';
+import { prisma } from '@/lib/database';
 import type { APIResponse, CampaignMetrics, Campaign } from '@/types/dashboard';
 
 /**
