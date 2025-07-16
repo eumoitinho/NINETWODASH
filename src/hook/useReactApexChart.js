@@ -46,7 +46,7 @@ const useReactApexChart = () => {
     },
     stroke: {
       curve: "smooth",
-      colors: ["#487FFF"], // Specify the line color here
+      colors: ["#D00054"], // Specify the line color here
       width: 3,
     },
     markers: {
@@ -221,7 +221,7 @@ const useReactApexChart = () => {
 
   let donutChartSeries = [500, 500, 500];
   let donutChartOptions = {
-    colors: ["#FF9F29", "#487FFF", "#45B369"],
+    colors: ["#FF9F29", "#D00054", "#45B369"],
     labels: ["Active", "New", "Total"],
     legend: {
       show: false,
@@ -285,7 +285,7 @@ const useReactApexChart = () => {
   ];
 
   let paymentStatusChartOptions = {
-    colors: ["#487FFF", "#FF9F29"],
+    colors: ["#D00054", "#FF9F29"],
     labels: ["Active", "New", "Total"],
     legend: {
       show: false,
@@ -1925,7 +1925,7 @@ const useReactApexChart = () => {
     },
     fill: {
       type: "gradient",
-      colors: ["#487FFF"], // Set the starting color (top color) here
+      colors: ["#D00054"], // Set the starting color (top color) here
       gradient: {
         shade: "light", // Gradient shading type
         type: "vertical", // Gradient direction (vertical)
@@ -2140,7 +2140,7 @@ const useReactApexChart = () => {
   ];
 
   let paymentStatusChartOptionsThree = {
-    colors: ["#487FFF", "#FF9F29"],
+    colors: ["#D00054", "#FF9F29"],
     labels: ["Active", "New", "Total"],
     legend: {
       show: false,
@@ -2604,7 +2604,7 @@ const useReactApexChart = () => {
         show: false,
       },
     },
-    colors: ["#487FFF", "#EF4A00"],
+    colors: ["#D00054", "#EF4A00"],
     plotOptions: {
       bar: {
         columnWidth: "8",
@@ -3180,7 +3180,7 @@ const useReactApexChart = () => {
     },
   ];
   let columnChartOptionsOne = {
-    colors: ["#487FFF", "#FF9F29"],
+    colors: ["#D00054", "#FF9F29"],
     labels: ["Active", "New", "Total"],
     legend: {
       show: false,
@@ -3327,7 +3327,7 @@ const useReactApexChart = () => {
     },
     fill: {
       type: "gradient",
-      colors: ["#487FFF"], // Set the starting color (top color) here
+      colors: ["#D00054"], // Set the starting color (top color) here
       gradient: {
         shade: "light", // Gradient shading type
         type: "vertical", // Gradient direction (vertical)
@@ -3422,7 +3422,7 @@ const useReactApexChart = () => {
         },
       },
     ],
-    colors: ["#487FFF", "#FF9F29", "#48AB69", "#45B369"],
+    colors: ["#D00054", "#FF9F29", "#48AB69", "#45B369"],
     plotOptions: {
       bar: {
         horizontal: false,
@@ -3508,7 +3508,7 @@ const useReactApexChart = () => {
         show: false,
       },
     },
-    colors: ["#487FFF", "#EF4A00"],
+    colors: ["#D00054", "#EF4A00"],
     plotOptions: {
       bar: {
         columnWidth: "8",
@@ -3605,7 +3605,7 @@ const useReactApexChart = () => {
     },
     stroke: {
       curve: "smooth",
-      colors: ["#487FFF"],
+      colors: ["#D00054"],
       width: 4,
     },
     markers: {
@@ -3826,7 +3826,7 @@ const useReactApexChart = () => {
         show: false,
       },
     },
-    colors: ["#487FFF"], // Set the color of the series
+    colors: ["#D00054"], // Set the color of the series
     dataLabels: {
       enabled: true,
     },
@@ -3914,7 +3914,7 @@ const useReactApexChart = () => {
         bottom: 0,
       },
     },
-    colors: ["#487FFF", "#FF9F29"], // Set the color of the series
+    colors: ["#D00054", "#FF9F29"], // Set the color of the series
     dataLabels: {
       enabled: false,
     },
@@ -4027,7 +4027,7 @@ const useReactApexChart = () => {
     stroke: {
       curve: "stepline",
     },
-    colors: ["#487FFF"], // Set the color of the series
+    colors: ["#D00054"], // Set the color of the series
     dataLabels: {
       enabled: false,
     },
@@ -4192,7 +4192,7 @@ const useReactApexChart = () => {
       show: false, // This will remove the white border
     },
     labels: ["Team A", "Team B", "Team C", "Team D"],
-    colors: ["#487FFF", "#FF9F29", "#45B369", "#EF4A00"],
+    colors: ["#D00054", "#FF9F29", "#45B369", "#EF4A00"],
     plotOptions: {
       pie: {
         dataLabels: {
@@ -4305,9 +4305,9 @@ const useReactApexChart = () => {
       height: 264,
     },
     labels: ["Product 1", "Product 2", "Product 3", "Product 4"],
-    colors: ["#487FFF", "#FF9F29", "#9935FE", "#EF4A00"],
+    colors: ["#D00054", "#FF9F29", "#9935FE", "#EF4A00"],
     stroke: {
-      colors: ["#487FFF", "#FF9F29", "#9935FE", "#EF4A00"],
+      colors: ["#D00054", "#FF9F29", "#9935FE", "#EF4A00"],
     },
     fill: {
       opacity: 0.8,
@@ -4565,7 +4565,7 @@ const useReactApexChart = () => {
   let expenseStatisticsSeries = [30, 30, 30, 30];
 
   let balanceStatisticsOptions = {
-    colors: ["#487FFF", "#FF9F29"],
+    colors: ["#D00054", "#FF9F29"],
     labels: ["Active", "New", "Total"],
     legend: {
       show: false,
@@ -4785,7 +4785,7 @@ const useReactApexChart = () => {
     stroke: {
       curve: "smooth",
       width: 3,
-      colors: ["#487FFF", "#FF9F29"], // Use two colors for the lines
+      colors: ["#D00054", "#FF9F29"], // Use two colors for the lines
       lineCap: "round",
     },
     grid: {
@@ -4820,7 +4820,7 @@ const useReactApexChart = () => {
     },
     fill: {
       type: "gradient",
-      colors: ["#487FFF", "#FF9F29"], // Use two colors for the gradient
+      colors: ["#D00054", "#FF9F29"], // Use two colors for the gradient
 
       gradient: {
         shade: "light",
@@ -4834,7 +4834,7 @@ const useReactApexChart = () => {
       },
     },
     markers: {
-      colors: ["#487FFF", "#FF9F29"], // Use two colors for the markers
+      colors: ["#D00054", "#FF9F29"], // Use two colors for the markers
       strokeWidth: 3,
       size: 0,
       hover: {
@@ -5123,7 +5123,7 @@ const useReactApexChart = () => {
   ];
 
   let userOverviewDonutChartOptionsOne = {
-    colors: ["#FF9F29", "#487FFF", "#45B369"],
+    colors: ["#FF9F29", "#D00054", "#45B369"],
     labels: ["Active", "New", "Total"],
     legend: {
       show: false,
@@ -5334,7 +5334,7 @@ const useReactApexChart = () => {
     stroke: {
       curve: "smooth",
       width: 3,
-      colors: ["#487FFF", "#FF9F29"], // Use two colors for the lines
+      colors: ["#D00054", "#FF9F29"], // Use two colors for the lines
       lineCap: "round",
     },
     grid: {
@@ -5369,7 +5369,7 @@ const useReactApexChart = () => {
     },
     fill: {
       type: "gradient",
-      colors: ["#487FFF", "#FF9F29"], // Use two colors for the gradient
+      colors: ["#D00054", "#FF9F29"], // Use two colors for the gradient
 
       gradient: {
         shade: "light",
@@ -5383,7 +5383,7 @@ const useReactApexChart = () => {
       },
     },
     markers: {
-      colors: ["#487FFF", "#FF9F29"], // Use two colors for the markers
+      colors: ["#D00054", "#FF9F29"], // Use two colors for the markers
       strokeWidth: 3,
       size: 0,
       hover: {

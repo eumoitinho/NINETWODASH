@@ -4,9 +4,14 @@ import "./font.css";
 import "./globals.css";
 
 export const metadata = {
-  title: "NINETWODASH - Dashboard de Marketing Digital",
+  title: "Ninetwo - Dashboard de Marketing Digital",
   description:
-    "NINETWODASH é o dashboard completo para acompanhar métricas de Google Ads, Facebook Ads e Google Analytics em tempo real.",
+    "Ninetwo é o dashboard completo para acompanhar métricas de Google Ads, Facebook Ads e Google Analytics em tempo real.",
+  icons: {
+    icon: '/fav.png',
+    shortcut: '/fav.png',
+    apple: '/fav.png',
+  },
 };
 
 export default function RootLayout({ children }) {

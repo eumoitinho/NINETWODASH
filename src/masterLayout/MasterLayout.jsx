@@ -138,17 +138,17 @@ const MasterLayout = ({ children }) => {
         <div>
           <Link href='/' className='sidebar-logo'>
             <img
-              src='/assets/images/logo.png'
+              src='/ninetwo-logo.png'
               alt='site logo'
               className='light-logo'
             />
             <img
-              src='/assets/images/logo-light.png'
+              src='/ninetwo-logo.png'
               alt='site logo'
               className='dark-logo'
             />
             <img
-              src='/assets/images/logo-icon.png'
+              src='/fav.png'
               alt='site logo'
               className='logo-icon'
             />
